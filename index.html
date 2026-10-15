@@ -25,6 +25,37 @@ PROJECT:{hp:1,pts:10,wpn:'STICKY',c:'#c96',d:(x,y,f)=>{R(x-24,y-14,48,30,'#c96')
 CUSTOMER:{hp:2,pts:15,wpn:'EMAIL',c:'#d77',d:(x,y,f)=>{R(x-14,y-22,28,24,'#eab');R(x-16,y-24,32,6,'#633');eyes(x,y-16,7);R(x-8,y-6,16,4,'#a00');R(x-6,y-4,12,2,'#fff');R(x-22,y+2,44,18,'#d77');R(x-30,y-4+f*3,8,14,'#eab');R(x+22,y-4-f*3,8,14,'#eab');R(x-4,y+2,8,16,'#933')}},
 DEADLINE:{hp:2,pts:20,wpn:'PENCIL',c:'#e44',d:(x,y,f)=>{ctx.fillStyle='#e44';ctx.beginPath();ctx.arc(x,y,22,0,7);ctx.fill();R(x-18,y-18,36,36,'#fff0');ctx.fillStyle='#fee';ctx.beginPath();ctx.arc(x,y,16,0,7);ctx.fill();ctx.strokeStyle='#000';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-12);ctx.moveTo(x,y);const a=t/20;ctx.lineTo(x+Math.cos(a)*10,y+Math.sin(a)*10);ctx.stroke();R(x-22,y-28,10,8,'#e44');R(x+12,y-28,10,8,'#e44');R(x-12,y+20,6,6+f,'#e44');R(x+6,y+20,6,6-f,'#e44')}},
 'ALLIGATOR CHAIR':{hp:3,pts:40,wpn:'STAPLE',c:'#4a9a3a',d:(x,y,f)=>{R(x-26,y-24,30,30,'#333');R(x-24,y-22,26,26,'#444');R(x-4,y-6,30,10,'#4a9a3a');R(x-4,y-14+f,32,8,'#5b5');for(let i=0;i<5;i++){R(x+i*6-2,y-6,3,4,'#fff');R(x+i*6+1,y-6+f+0,3,-4,'#fff')}R(x+2,y-20,6,6,'#ff4');R(x+4,y-18,2,4,'#000');R(x-4,y+4,26,4,'#2a6a2a');R(x-2,y+8,4,10,'#666');R(x-14,y+18,28,3,'#666');R(x-14,y+21,4,4,'#222');R(x+10,y+21,4,4,'#222');R(x-30,y+6,8,4,'#4a9a3a')}},
+'JUSTINS STINK':{hp:5,pts:80,wpn:'VOMIT',c:'#3d9a3a',d:(x,y,f)=>{
+// giant green toad — warty body, bulb eyes, wide mouth
+ctx.fillStyle='#2d7a2a';ctx.beginPath();ctx.ellipse(x,y+6,34,26,0,0,7);ctx.fill();
+ctx.fillStyle='#3d9a3a';ctx.beginPath();ctx.ellipse(x,y+2,30,22,0,0,7);ctx.fill();
+// warts
+for(const [wx,wy] of [[-18,-2],[-8,8],[12,-4],[20,6],[-22,10],[6,14]]){R(x+wx,y+wy,5,4,'#2a6a28');R(x+wx+1,y+wy+1,2,2,'#4aba48')}
+// belly
+ctx.fillStyle='#7aba5a';ctx.beginPath();ctx.ellipse(x,y+10,16,12,0,0,7);ctx.fill();
+// eye stalks
+R(x-18,y-28,12,14,'#3d9a3a');R(x+6,y-28,12,14,'#3d9a3a');
+R(x-16,y-34,14,12,'#4aba48');R(x+8,y-34,14,12,'#4aba48');
+R(x-13,y-31,8,8,'#fff');R(x+11,y-31,8,8,'#fff');
+R(x-10,y-28,4,4,'#113');R(x+14,y-28,4,4,'#113');
+R(x-9,y-27,2,2,'#fff');R(x+15,y-27,2,2,'#fff');
+// brows / stink frown
+R(x-16,y-36,10,2,'#1a4a18');R(x+12,y-36,10,2,'#1a4a18');
+// huge mouth
+ctx.fillStyle='#1a3018';ctx.beginPath();ctx.ellipse(x,y+4,22,10,0,0,Math.PI,true);ctx.fill();
+R(x-18,y+2,36,4,'#5a2a2a');
+// teeth
+for(let i=-14;i<=14;i+=7)R(x+i,y+2,4,5,'#efe');
+// tongue out when animating
+if(f>0){ctx.fillStyle='#e46';ctx.beginPath();ctx.ellipse(x+f*4,y+14,8,5,0.3,0,7);ctx.fill()}
+// slime drip
+R(x-4,y+18,3,6+f,'#8f8');R(x+6,y+20,2,4,'#6c6');
+// stubby legs
+R(x-28,y+22,14,10,'#2d7a2a');R(x+14,y+22,14,10,'#2d7a2a');
+R(x-30,y+28,8,6,'#1a5a18');R(x+22,y+28,8,6,'#1a5a18');
+// stink clouds
+ctx.globalAlpha=.45;R(x-36,y-18+f,6,6,'#8f8');R(x+32,y-12-f,5,5,'#af8');R(x-8,y-42,4,4,'#9f9');ctx.globalAlpha=1;
+}},
 'BLAIN BERRY':{hp:4,pts:45,wpn:'FOOTBALL',c:'#4a8ae8',d:(x,y,f)=>{R(x-12,y-30,24,6,'#1a4aa8');R(x-12,y-30,30,3,'#1a4aa8');R(x-10,y-25,20,4,'#fff');ctx.fillStyle='#1a4aa8';ctx.font='bold 5px monospace';ctx.fillText('BB',x,y-22);R(x-10,y-21,20,18,'#f0c8a0');eyes(x,y-17,5,'#fff','#025');R(x-6,y-9,12,2,'#7a3a2a');R(x-7,y-5,14,3,'#ccc');R(x-20,y-3,40,22,'#2a6ae0');R(x-20,y-3,4,22,'#fff');R(x+16,y-3,4,22,'#fff');R(x-1,y-3,2,10,'#ddd');R(x-3,y+6,5,4,'#ccc');R(x-14,y+19,10,8,'#1a4aa8');R(x+4,y+19,10,8,'#1a4aa8');R(x-30,y-6+f*4,10,14,'#2a6ae0');ctx.fillStyle='#7a3a1a';ctx.beginPath();ctx.ellipse(x-25,y-10+f*4,7,4,.6,0,7);ctx.fill();R(x+20,y+0,12,14,'#ddb');R(x+22,y+3,8,1,'#555');R(x+22,y+6,8,1,'#555');R(x+22,y+9,6,1,'#555')}},
 'SALES FEIN':{hp:1,pts:25,wpn:'EMAIL',c:'#ffd84a',d:(x,y,f)=>{R(x-9,y-15,18,7,'#ffd84a');R(x-10,y-12,4,8,'#ffd84a');R(x+6,y-12,4,8,'#f0c030');R(x-4,y-17,10,3,'#ffe88a');R(x-7,y-9,14,12,'#f5cfa8');R(x-5,y-6,3,3,'#28f');R(x+2,y-6,3,3,'#28f');R(x-4,y,8,2,'#fff');R(x-10,y+3,20,12,'#333');R(x-2,y+3,4,10,'#c22');R(x-14,y+4+f*2,4,9,'#333');R(x+10,y+2-f*2,4,6,'#333');R(x+11,y-6-f*2,5,9,'#222');R(x+12,y-5-f*2,3,6,'#4cf');R(x-8,y+15,6,4,'#222');R(x+2,y+15,6,4,'#222')}},
 'SPREADSHEET SHARK':{hp:2,pts:30,wpn:'LASER',c:'#3ab06a',d:(x,y,f)=>{R(x-30,y-10,56,24,'#3ab06a');for(let i=-26;i<26;i+=8)R(x+i,y-10,1,24,'#1a6a3a');for(let j=-4;j<14;j+=6)R(x-30,y+j,56,1,'#1a6a3a');ctx.fillStyle='#3ab06a';ctx.beginPath();ctx.moveTo(x-6,y-10);ctx.lineTo(x+4,y-26);ctx.lineTo(x+10,y-10);ctx.fill();R(x+26,y-6,8,16,'#2a904a');for(let i=0;i<6;i++)R(x-26+i*7,y+8,4,5,'#fff');R(x-22,y-4,6,6,'#fff');R(x-20,y-2,3,3,'#000');ctx.fillStyle='#fff';ctx.font='bold 8px monospace';ctx.fillText('=SUM()',x+6,y+3);R(x-36+f*2,y-4,6,12,'#2a904a')}},
@@ -40,6 +71,10 @@ PENCIL:{spd:3.2,draw:b=>{ctx.save();ctx.translate(b.x,b.y);ctx.rotate(Math.atan2
 EMAIL:{spd:2.4,draw:b=>{R(b.x-8,b.y-5,16,11,'#eef');ctx.strokeStyle='#557';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x-8,b.y-5);ctx.lineTo(b.x,b.y+1);ctx.lineTo(b.x+8,b.y-5);ctx.stroke();R(b.x+4,b.y-8,5,5,'#f33')}},
 FOOTBALL:{spd:3.4,draw:b=>{ctx.save();ctx.translate(b.x,b.y);ctx.rotate(Math.atan2(b.vy,b.vx)+b.life*.15);ctx.fillStyle='#7a3a1a';ctx.beginPath();ctx.ellipse(0,0,10,6,0,0,7);ctx.fill();R(-9,-1,2,2,'#fff');R(7,-1,2,2,'#fff');R(-4,-1,8,1,'#fff');for(let i=-3;i<=3;i+=2)R(i,-3,1,4,'#fff');ctx.restore()}},
 STAPLE:{spd:4,draw:b=>{R(b.x-5,b.y-2,10,2,'#ccd');R(b.x-5,b.y-2,2,6,'#ccd');R(b.x+3,b.y-2,2,6,'#ccd')}},
+VOMIT:{spd:2.8,draw:b=>{const g=b.life||0;ctx.save();ctx.translate(b.x,b.y);ctx.rotate(g*.2);
+ctx.fillStyle='#6c4';ctx.beginPath();ctx.ellipse(0,0,9+Math.sin(g/3),7,0,0,7);ctx.fill();
+R(-5,-2,4,4,'#9f6');R(2,0,5,3,'#4a3');R(-2,3,3,3,'#8e5');
+ctx.fillStyle='#cf8';ctx.globalAlpha=.6;ctx.beginPath();ctx.arc(-6,-6,3,0,7);ctx.arc(5,-5,2,0,7);ctx.fill();ctx.globalAlpha=1;ctx.restore()}},
 STICKY:{spd:1.6,draw:b=>{ctx.save();ctx.translate(b.x,b.y);ctx.rotate(Math.sin(t/8+b.s)*.5);R(-7,-7,14,14,'#ff6');R(-7,-7,14,3,'#ee4');R(-5,-1,10,1,'#996');R(-5,2,7,1,'#996');ctx.restore()}}
 };
 const GUNS=[
@@ -59,19 +94,23 @@ function useAbility(){if(state!=='play'||abCd>0)return;if(selA===1){dashDir=(key
 const QUIPS=['Per my last email...','Circling back!','Quick sync?','This is due EOD.','Can you hop on a call?','Let\'s take this offline.','New priorities!','Synergy incoming!'];
 let state='start',keys={},padL=0,padR=0,p,bullets,ebul,enemies,parts,score,lives,wave,dir,speed,stepT,hi=+localStorage.ratHi||0,inv,quip,quipT,ufo,t=0,cool;
 function reset(){p={x:W/2,w:30};bullets=[];ebul=[];parts=[];score=0;lives=3+(selA===3?1:0);wave=0;inv=0;ufo=null;shield=selA===0?1:0;shT=0;abCd=0;slowT=0;dashT=0;nextWave()}
-function nextWave(){wave++;enemies=[];ebul=[];if(wave===2){bossWave();return}const rows=Math.min(2+Math.floor(wave/3),3),cols=4,pool=WAVE_POOL[Math.min(wave-1,WAVE_POOL.length-1)];
+function nextWave(){wave++;enemies=[];ebul=[];if(wave===2){bossWave();return}if(wave===3){justinWave();return}const rows=Math.min(2+Math.floor(wave/3),3),cols=4,pool=WAVE_POOL[Math.min(wave===1?0:wave-2,WAVE_POOL.length-1)];
 for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const n=pool[(r*3+c+wave)%pool.length],T=TYPES[n],hp=T.hp+Math.floor(wave/6);enemies.push({x:70+c*105,y:80+r*78,n,hp,max:hp})}
 dir=1;speed=8+wave*2.5;stepT=0;quip='DEPTH '+wave+': '+QUIPS[wave%QUIPS.length];quipT=150;beep(300,.2);beep(450,.3)}
-function bossWave(){const hp=26;enemies.push({x:W/2,y:150,n:'ALLIGATOR CHAIR',hp,max:hp,big:2.2,boss:1});
+function bossWave(){const hp=26;enemies.push({x:W/2,y:150,n:'ALLIGATOR CHAIR',hp,max:hp,big:2.2,boss:1,bossLabel:'THE ALLIGATOR CHAIR'});
 for(let i=0;i<6;i++)enemies.push({x:W/2,y:150,n:'SALES FEIN',hp:1,max:1,orb:i*Math.PI/3});
 dir=1;speed=0;stepT=0;quip='DEPTH 2: THE BIG CHAIR + HIS SALES FEINS';quipT=180;beep(120,.5,'sawtooth',.08);beep(90,.6,'sawtooth',.08)}
-function fire(e){const T=TYPES[e.n],k=T.wpn,s=WEAPONS[k].spd*(1+wave*.06),y=e.y+22,dx=p.x-e.x;
+function justinWave(){const hp=34;enemies.push({x:W/2,y:155,n:'JUSTINS STINK',hp,max:hp,big:2.35,boss:1,bossLabel:"JUSTIN'S STINK"});
+dir=1;speed=0;stepT=0;quip="DEPTH 3: JUSTIN'S STINK — LOOK OUT BELOW";quipT=180;beep(80,.5,'sawtooth',.1);beep(60,.7,'sine',.08)}
+function fire(e){const T=TYPES[e.n],k=T.wpn,s=WEAPONS[k].spd*(1+wave*.06),y=e.y+(e.big?55:22),dx=p.x-e.x;
 if(e.big&&k==='STAPLE'){const mk2=(vx,vy)=>ebul.push({k,x:e.x,y:e.y+50,vx,vy,s:0,life:0});[-1.5,-.5,.5,1.5].forEach(v=>mk2(v,s));return}
+if(e.big&&k==='VOMIT'){const a=Math.atan2(H-36-(e.y+40),dx+(Math.random()-.5)*30);[-.55,-.25,0,.25,.55].forEach((off,i)=>{const sp=s*(.85+i%2*.15);ebul.push({k,x:e.x+off*18,y:e.y+48,vx:Math.cos(a+off)*sp,vy:Math.max(1.4,Math.sin(a+off)*sp)*.4-1.8,s:Math.random()*9,life:0,grav:.14})});beep(90,.2,'sawtooth',.06);return}
 const mk=(vx,vy)=>ebul.push({k,x:e.x,y,vx,vy,s:Math.random()*9,life:0});
 if(k==='PENCIL'){const a=Math.atan2(H-32-y,dx);mk(Math.cos(a)*s,Math.max(1.5,Math.sin(a)*s))}
 else if(k==='FOOTBALL'){const a=Math.atan2(H-32-y,dx+(Math.random()-.5)*40);mk(Math.cos(a)*s,Math.max(1.8,Math.sin(a)*s))}
 else if(k==='STAPLE'){mk(-.6,s);mk(.6,s)}
-else mk(0,s);beep(k==='LASER'?1400:k==='AI'?220:600,.05,'sawtooth',.03)}
+else if(k==='VOMIT'){const a=Math.atan2(H-32-y,dx);mk(Math.cos(a)*s,Math.max(1.2,Math.sin(a)*s)*.5-1.2);ebul[ebul.length-1].grav=.12}
+else mk(0,s);beep(k==='LASER'?1400:k==='AI'?220:k==='VOMIT'?100:600,.05,'sawtooth',.03)}
 function boom(x,y,c){for(let i=0;i<14;i++)parts.push({x,y,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*5,l:30,c})}
 addEventListener('keydown',e=>{keys[e.code]=1;if(['Space','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
 if(e.code==='Enter'){if(state==='start'||state==='over')goLoad();else if(state==='load')startRun()}
@@ -104,14 +143,14 @@ if(keys.ArrowLeft||keys.KeyA||padL)p.x-=4.5;if(keys.ArrowRight||keys.KeyD||padR)
 const G=GUNS[selG];cool--;if(keys.Space&&cool<=0&&bullets.length<G.max){const B=(vx)=>bullets.push({x:p.x,y:H-55,vx,dmg:G.dmg,pierce:G.pierce,hits:[]});
 if(G.spread){B(-2);B(0);B(2)}else B(0);cool=G.cd;beep(G.pierce?300:G.cd<10?1100:880,.06,G.pierce?'sawtooth':'square')}
 bullets.forEach(b=>{b.y-=G.pierce?11:G.cd<10?10:8;b.x+=b.vx});bullets=bullets.filter(b=>b.y>-20&&b.x>0&&b.x<W);
-const boss=enemies.find(e=>e.boss);if(boss){boss.x=W/2+Math.sin(t/90)*130;boss.y=150+Math.sin(t/57)*25;enemies.forEach(e=>{if(e.orb!==undefined){e.orb+=.025;e.x=boss.x+Math.cos(e.orb)*110;e.y=boss.y+Math.sin(e.orb)*75}})}else if(wave===2)enemies.forEach(e=>{if(e.orb!==undefined){e.dead=1;score+=TYPES[e.n].pts*wave;boom(e.x,e.y,'#ffd84a')}});
+const boss=enemies.find(e=>e.boss);if(boss){if(boss.n==='JUSTINS STINK'){boss.x=W/2+Math.sin(t/70)*100;boss.y=145+Math.sin(t/40)*30+(boss.hop||0);if(t%90===0)boss.hop=-18;if(boss.hop)boss.hop=Math.min(0,boss.hop+1.2)}else{boss.x=W/2+Math.sin(t/90)*130;boss.y=150+Math.sin(t/57)*25}enemies.forEach(e=>{if(e.orb!==undefined){e.orb+=.025;e.x=boss.x+Math.cos(e.orb)*110;e.y=boss.y+Math.sin(e.orb)*75}})}else if(wave===2)enemies.forEach(e=>{if(e.orb!==undefined){e.dead=1;score+=TYPES[e.n].pts*wave;boom(e.x,e.y,'#ffd84a')}});
 // enemies step
 if(!boss)stepT+=speed/60*(1+(12-Math.min(enemies.length,12))/6);
 if(!boss&&stepT>=1){stepT=0;let edge=enemies.some(e=>(dir>0&&e.x>W-50)||(dir<0&&e.x<50));
 if(edge){dir*=-1;enemies.forEach(e=>e.y+=18)}else enemies.forEach(e=>e.x+=dir*7)}
-if(Math.random()<.012+wave*.003&&enemies.length&&ebul.length<6+wave){fire(boss&&Math.random()<.35?boss:enemies[Math.random()*enemies.length|0])}
+if(Math.random()<((boss&&boss.n==='JUSTINS STINK')?.022:.012)+wave*.003&&enemies.length&&ebul.length<((boss&&boss.n==='JUSTINS STINK')?10:6)+wave){fire(boss&&Math.random()<((boss.n==='JUSTINS STINK')?.7:.35)?boss:enemies[Math.random()*enemies.length|0])}
 if(!ufo&&Math.random()<.002)ufo={x:-40,v:2};if(ufo){ufo.x+=ufo.v;if(ufo.x>W+40)ufo=null}
-ebul.forEach(b=>{b.life++;if(b.k==='AI'&&b.life<120){b.vx+=Math.sign(p.x-b.x)*.06;b.vx=Math.max(-2.2,Math.min(2.2,b.vx))}if(b.k==='EMAIL')b.x+=Math.sin(b.life/10)*2;if(b.k==='STICKY')b.x+=Math.sin(b.life/15+b.s)*1.2;const sm=slowT>0?.35:1;b.x+=b.vx*sm;b.y+=b.vy*sm});ebul=ebul.filter(b=>b.y<H&&b.x>-20&&b.x<W+20);
+ebul.forEach(b=>{b.life++;if(b.k==='AI'&&b.life<120){b.vx+=Math.sign(p.x-b.x)*.06;b.vx=Math.max(-2.2,Math.min(2.2,b.vx))}if(b.k==='EMAIL')b.x+=Math.sin(b.life/10)*2;if(b.k==='STICKY')b.x+=Math.sin(b.life/15+b.s)*1.2;if(b.k==='VOMIT'){b.vy+=(b.grav||.12);b.vx+=Math.sign(p.x-b.x)*.04;b.vx=Math.max(-3.5,Math.min(3.5,b.vx))}const sm=slowT>0?.35:1;b.x+=b.vx*sm;b.y+=b.vy*sm});ebul=ebul.filter(b=>b.y<H+20&&b.x>-30&&b.x<W+30);
 for(const b of bullets){for(const e of enemies)if(!e.dead&&!b.hits.includes(e)&&Math.abs(b.x-e.x)<(e.big?66:e.orb!==undefined?16:32)&&Math.abs(b.y-e.y)<(e.big?60:e.orb!==undefined?20:26)){b.hits.push(e);if(!b.pierce)b.dead=1;e.fl=6;if((e.hp-=b.dmg)<=0){e.dead=1;score+=TYPES[e.n].pts*wave;boom(e.x,e.y,TYPES[e.n].c);boom(e.x,e.y,'#fff');beep(200,.12,'triangle',.08)}else beep(500,.05);if(!b.pierce)break}
 if(ufo&&Math.abs(b.x-ufo.x)<30&&Math.abs(b.y-30)<12){b.dead=1;score+=300;boom(ufo.x,30,'#fc4');quip='CEO DODGED! +300';quipT=90;ufo=null;beep(1200,.3)}}
 bullets=bullets.filter(b=>!b.dead);enemies=enemies.filter(e=>!e.dead);
@@ -134,7 +173,7 @@ ctx.fillStyle='#f33';ctx.fillRect(x-4,y-13,2,2);ctx.fillRect(x+2,y-13,2,2);
 ctx.strokeStyle='#e9a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y+6);ctx.quadraticCurveTo(x+18,y+12+Math.sin(t/5)*3,x+22,y);ctx.stroke();
 ctx.fillStyle='#5a5a60';ctx.fillRect(x-12,y+6,5,3);ctx.fillRect(x+7,y+6,5,3);ctx.fillStyle='#333';ctx.fillRect(x-4,y-24,8,4);ctx.fillRect(x-2,y-28,4,4)}// tiny tie? hat
 function enemy(e){const T=TYPES[e.n],f=(t>>4)%2?1:-1,k=e.big||1;ctx.save();ctx.translate(e.x,e.y);ctx.scale(k,k);T.d(0,0,f);if(e.fl>0){e.fl--;ctx.globalAlpha=.5;R(-32,-30,64,56,'#fff');ctx.globalAlpha=1}ctx.restore();
-if(e.big){R(e.x-60,e.y-78,120,7,'#300');R(e.x-60,e.y-78,120*e.hp/e.max,7,'#f44');txt('THE ALLIGATOR CHAIR',e.x,e.y+80,13,T.c);return}
+if(e.big){const hy=e.y-(e.big*36+8);R(e.x-70,hy,140,8,'#300');R(e.x-70,hy,140*e.hp/e.max,8,'#f44');txt(e.bossLabel||e.n,e.x,e.y+(e.big*34+8),13,T.c);return}
 if(e.max>1){R(e.x-20,e.y-36,40,4,'#300');R(e.x-20,e.y-36,40*e.hp/e.max,4,'#f44')}
 const ly=e.orb!==undefined?27:35;ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillStyle='#000';ctx.fillText(e.n,e.x+1,ly+e.y+1);ctx.fillStyle=T.c;ctx.fillText(e.n,e.x,e.y+ly)}
 function drawLoad(){txt('PICK YOUR LOADOUT',W/2,60,26,'#b8e05a');txt('1 weapon + 1 ability. Tap/click, then START.',W/2,88,11,'#9ab880');
@@ -146,7 +185,7 @@ R(140,530,200,50,(t>>4)%2?'#b8e05a':'#9ac040');txt('START ▶',W/2,563,22,'#1420
 function txt(s,x,y,sz,c='#cfe8b0'){ctx.font='bold '+sz+'px monospace';ctx.textAlign='center';ctx.fillStyle='#000';ctx.fillText(s,x+2,y+2);ctx.fillStyle=c;ctx.fillText(s,x,y)}
 function draw(){bg();
 if(state==='start'){txt('RAT RACE',W/2,150,56,'#b8e05a');txt('Escape the sewer of work.',W/2,200,16);
-['Projects, customers, Blain Berry & the Alligator Chair','are flooding the pipes. Dodge AI, lasers & pencils.','Fling cheese. Dodge stress. Never stop.'].forEach((s,i)=>txt(s,W/2,240+i*22,12,'#9ab880'));
+['Projects, Blain Berry, the Alligator Chair & Justin\'s Stink','are flooding the pipes. Dodge AI, lasers, pencils & puke.','Fling cheese. Dodge stress. Never stop.'].forEach((s,i)=>txt(s,W/2,240+i*22,12,'#9ab880'));
 rat(W/2,360);['←/→ or A/D : scurry','SPACE : fling cheese','SHIFT/E/⚡ : ability','P / ESC : pause (lol, as if)'].forEach((s,i)=>txt(s,W/2,420+i*22,14));
 txt((t>>5)%2?'PRESS ENTER OR TAP':'',W/2,520,18,'#fc4');txt('HI-SCORE '+hi,W/2,580,12,'#9ab880');return}
 if(state==='load'){drawLoad();return}
