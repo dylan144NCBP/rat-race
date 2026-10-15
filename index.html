@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Rat Race</title>
+<style>
+html,body{margin:0;height:100%;background:#0b120c;overflow:hidden;font-family:monospace;color:#cfe8b0}
+#wrap{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column}
+canvas{background:#142016;image-rendering:pixelated;box-shadow:0 0 30px #000;border:3px solid #2c3a22;touch-action:none}
+#touch{display:none;gap:10px;margin-top:8px}
+#touch button{font:bold 20px monospace;padding:14px 22px;background:#2c3a22;color:#d8f0a0;border:2px solid #5a7a3a;border-radius:8px}
+@media (pointer:coarse){#touch{display:flex}}
+</style></head><body>
+<div id="wrap"><canvas id="c" width="480" height="640"></canvas>
+<div id="touch"><button id="bl">◀</button><button id="bf">🧀</button><button id="br">▶</button></div></div>
+<script>
+const W=480,H=640,cv=document.getElementById('c'),ctx=cv.getContext('2d');
+function fit(){const t=matchMedia('(pointer:coarse)').matches?80:20,s=Math.min((innerWidth-20)/W,(innerHeight-t)/H);cv.style.width=W*s+'px';cv.style.height=H*s+'px'}
+addEventListener('resize',fit);fit();
+// audio
+let ac;function beep(f,d,type='square',v=.05){try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+const NAMES=['PROJECT','CUSTOMER','DEADLINE','MEETING','EMAIL','SLACK','BOSS','REPORT','BUDGET','KPI','TPS','AUDIT'];
+const COLORS={PROJECT:'#c96',CUSTOMER:'#d77',DEADLINE:'#e44',MEETING:'#9ad',EMAIL:'#8bf',SLACK:'#c8e',BOSS:'#fc4',REPORT:'#ddd',BUDGET:'#7c7',KPI:'#fa8',TPS:'#eea',AUDIT:'#f6a'};
+const QUIPS=['Per my last email...','Circling back!','Quick sync?','This is due EOD.','Can you hop on a call?','Let\'s take this offline.','New priorities!','Synergy incoming!'];
+let state='start',keys={},p,bullets,ebul,enemies,parts,score,lives,wave,dir,speed,stepT,hi=+localStorage.ratHi||0,inv,quip,quipT,ufo,t=0,cool;
+function reset(){p={x:W/2,w:30};bullets=[];ebul=[];parts=[];score=0;lives=3;wave=0;inv=0;ufo=null;nextWave()}
+function nextWave(){wave++;enemies=[];const rows=Math.min(3+Math.floor(wave/2),6),cols=6;
+for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const n=NAMES[(r*2+c+wave)%NAMES.length];enemies.push({x:40+c*70,y:60+r*42,n,hp:n==='BOSS'||n==='DEADLINE'?2:1})}
+dir=1;speed=10+wave*3;stepT=0;quip='WAVE '+wave+': '+QUIPS[wave%QUIPS.length];quipT=150;beep(300,.2);beep(450,.3)}
+function boom(x,y,c){for(let i=0;i<14;i++)parts.push({x,y,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*5,l:30,c})}
+addEventListener('keydown',e=>{keys[e.code]=1;if(['Space','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+if(e.code==='Enter'&&(state==='start'||state==='over')){reset();state='play'}
+if((e.code==='KeyP'||e.code==='Escape')&&(state==='play'||state==='pause'))state=state==='play'?'pause':'play';
+if(e.code==='KeyR'&&state==='over'){reset();state='play'}});
+addEventListener('keyup',e=>keys[e.code]=0);
+cv.addEventListener('click',e=>{if(state==='start'||state==='over'){reset();state='play'}});
+[['bl','ArrowLeft'],['br','ArrowRight'],['bf','Space']].forEach(([id,k])=>{const b=document.getElementById(id);
+b.addEventListener('touchstart',e=>{e.preventDefault();keys[k]=1;if(state!=='play'&&state!=='pause'){reset();state='play'}});b.addEventListener('touchend',e=>{e.preventDefault();keys[k]=0})});
+function hit(){if(inv>0)return;lives--;inv=120;boom(p.x,H-40,'#aaa');beep(80,.5,'sawtooth',.1);
+if(lives<=0){state='over';if(score>hi){hi=score;localStorage.ratHi=hi}}}
+function update(){t++;if(state!=='play')return;
+if(keys.ArrowLeft||keys.KeyA)p.x-=4.5;if(keys.ArrowRight||keys.KeyD)p.x+=4.5;p.x=Math.max(20,Math.min(W-20,p.x));
+cool--;if(keys.Space&&cool<=0&&bullets.length<3){bullets.push({x:p.x,y:H-55});cool=16;beep(880,.06)}
+bullets.forEach(b=>b.y-=8);bullets=bullets.filter(b=>b.y>0);
+// enemies step
+stepT+=speed/60*(1+ (36-Math.min(enemies.length,36))/12);
+if(stepT>=1){stepT=0;let edge=enemies.some(e=>(dir>0&&e.x>W-40)||(dir<0&&e.x<40));
+if(edge){dir*=-1;enemies.forEach(e=>e.y+=14)}else enemies.forEach(e=>e.x+=dir*6)}
+if(Math.random()<.01+wave*.004&&enemies.length){const e=enemies[Math.random()*enemies.length|0];ebul.push({x:e.x,y:e.y+12,v:2.5+wave*.25,c:COLORS[e.n]})}
+if(!ufo&&Math.random()<.002)ufo={x:-40,v:2};if(ufo){ufo.x+=ufo.v;if(ufo.x>W+40)ufo=null}
+ebul.forEach(b=>b.y+=b.v);ebul=ebul.filter(b=>b.y<H);
+for(const b of bullets){for(const e of enemies)if(Math.abs(b.x-e.x)<30&&Math.abs(b.y-e.y)<14){b.dead=1;if(--e.hp<=0){e.dead=1;score+=10*wave+(e.n==='BOSS'?50:0);boom(e.x,e.y,COLORS[e.n]);beep(200,.12,'triangle',.08)}else beep(500,.05);break}
+if(ufo&&Math.abs(b.x-ufo.x)<30&&Math.abs(b.y-30)<12){b.dead=1;score+=300;boom(ufo.x,30,'#fc4');quip='CEO DODGED! +300';quipT=90;ufo=null;beep(1200,.3)}}
+bullets=bullets.filter(b=>!b.dead);enemies=enemies.filter(e=>!e.dead);
+for(const b of ebul)if(Math.abs(b.x-p.x)<16&&b.y>H-50&&b.y<H-20){b.y=H+9;hit()}
+for(const e of enemies){if(e.y>H-60){hit();if(state==='play'){enemies.forEach(e=>e.y-=120)}break}}
+if(inv>0)inv--;if(quipT>0)quipT--;
+if(!enemies.length){score+=100*wave;nextWave()}}
+function bg(){// bricks
+const off=(t*.5)%24;ctx.fillStyle='#1a2618';ctx.fillRect(0,0,W,H);
+for(let y=-24;y<H;y+=24)for(let x=0;x<W;x+=48){const sx=x+((Math.floor((y+off)/24)%2)?24:0);ctx.fillStyle=((x+y)/24)%3?'#223020':'#1e2a1b';ctx.fillRect(sx%W-24,y+off,46,22)}
+// pipes
+ctx.fillStyle='#3a4a2a';ctx.fillRect(0,0,14,H);ctx.fillRect(W-14,0,14,H);ctx.fillStyle='#4f6338';ctx.fillRect(3,0,4,H);ctx.fillRect(W-11,0,4,H);
+// drips
+ctx.fillStyle='#6a8a3a';for(let i=0;i<6;i++){const dy=((t*2+i*137)%H);ctx.fillRect(12+i*(W/6)%W+30,dy,2,6)}
+// sludge
+ctx.fillStyle='#2f4a1c';ctx.fillRect(0,H-18,W,18);ctx.fillStyle='#4a6a24';for(let x=0;x<W;x+=8)ctx.fillRect(x,H-18+Math.sin(t/10+x/20)*2,8,3)}
+function rat(x,y){if(inv>0&&(t>>3)%2)return;ctx.fillStyle='#8a8a90';ctx.fillRect(x-12,y-8,24,14);ctx.fillRect(x-6,y-16,12,10);
+ctx.fillStyle='#e9a';ctx.fillRect(x-9,y-20,5,5);ctx.fillRect(x+4,y-20,5,5);ctx.fillRect(x-1,y-18,2,2);
+ctx.fillStyle='#f33';ctx.fillRect(x-4,y-13,2,2);ctx.fillRect(x+2,y-13,2,2);
+ctx.strokeStyle='#e9a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y+6);ctx.quadraticCurveTo(x+18,y+12+Math.sin(t/5)*3,x+22,y);ctx.stroke();
+ctx.fillStyle='#5a5a60';ctx.fillRect(x-12,y+6,5,3);ctx.fillRect(x+7,y+6,5,3);ctx.fillStyle='#333';ctx.fillRect(x-4,y-24,8,4);ctx.fillRect(x-2,y-28,4,4)}// tiny tie? hat
+function enemy(e){const c=COLORS[e.n],bob=(t>>4)%2?1:-1;ctx.fillStyle=c;ctx.fillRect(e.x-28,e.y-12,56,22);
+ctx.fillStyle='#000a';ctx.fillRect(e.x-28,e.y+6,56,4);ctx.fillStyle=c;ctx.fillRect(e.x-24,e.y+10,6,4+bob);ctx.fillRect(e.x+18,e.y+10,6,4-bob);
+if(e.hp>1){ctx.strokeStyle='#fff';ctx.strokeRect(e.x-28,e.y-12,56,22)}
+ctx.fillStyle='#111';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText(e.n,e.x,e.y+3)}
+function txt(s,x,y,sz,c='#cfe8b0'){ctx.font='bold '+sz+'px monospace';ctx.textAlign='center';ctx.fillStyle='#000';ctx.fillText(s,x+2,y+2);ctx.fillStyle=c;ctx.fillText(s,x,y)}
+function draw(){bg();
+if(state==='start'){txt('RAT RACE',W/2,150,56,'#b8e05a');txt('Escape the sewer of work.',W/2,200,16);
+['Projects, customers & deadlines','are flooding the pipes.','Fling cheese. Dodge stress. Never stop.'].forEach((s,i)=>txt(s,W/2,240+i*22,13,'#9ab880'));
+rat(W/2,360);['←/→ or A/D : scurry','SPACE : fling cheese','P / ESC : pause (lol, as if)'].forEach((s,i)=>txt(s,W/2,420+i*22,14));
+txt((t>>5)%2?'PRESS ENTER OR CLICK':'',W/2,520,18,'#fc4');txt('HI-SCORE '+hi,W/2,580,12,'#9ab880');return}
+enemies.forEach(enemy);if(ufo){ctx.fillStyle='#fc4';ctx.fillRect(ufo.x-26,22,52,16);ctx.fillStyle='#111';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText('CEO',ufo.x,34)}
+ctx.fillStyle='#fd4';bullets.forEach(b=>{ctx.fillRect(b.x-4,b.y-4,8,8);ctx.fillStyle='#c90';ctx.fillRect(b.x-1,b.y-1,2,2);ctx.fillStyle='#fd4'});
+ebul.forEach(b=>{ctx.fillStyle=b.c;ctx.fillRect(b.x-3,b.y-6,6,10);ctx.fillStyle='#fff';ctx.fillRect(b.x-1,b.y-4,2,4)});
+parts.forEach(q=>{q.x+=q.vx;q.y+=q.vy;q.l--;ctx.fillStyle=q.c;ctx.fillRect(q.x,q.y,3,3)});parts=parts.filter(q=>q.l>0);
+rat(p.x,H-32);
+ctx.fillStyle='#000a';ctx.fillRect(0,0,W,20);ctx.font='bold 13px monospace';ctx.fillStyle='#cfe8b0';ctx.textAlign='left';ctx.fillText('SCORE '+score,20,15);
+ctx.textAlign='center';ctx.fillText('DEPTH '+wave,W/2,15);ctx.textAlign='right';ctx.fillText('🐀'.repeat(Math.max(lives,0)),W-20,15);
+if(quipT>0)txt(quip,W/2,H/2+60,14,'#fc4');
+if(state==='pause'){ctx.fillStyle='#000a';ctx.fillRect(0,0,W,H);txt('PAUSED',W/2,H/2-10,40);txt('Unpaid break. Press P to resume.',W/2,H/2+25,13)}
+if(state==='over'){ctx.fillStyle='#000c';ctx.fillRect(0,0,W,H);txt('BURNT OUT',W/2,220,44,'#e44');txt('Final score: '+score,W/2,270,20);txt('Reached depth '+wave,W/2,300,14);
+txt('Hi-score: '+hi,W/2,325,14,'#fc4');txt('HR will be in touch.',W/2,365,13,'#9ab880');txt('[ R / ENTER / CLICK ] RESTART',W/2,430,16,'#b8e05a')}}
+cool=0;(function loop(){update();draw();requestAnimationFrame(loop)})();
+</script></body></html>
