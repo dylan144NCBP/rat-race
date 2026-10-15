@@ -1,145 +1,686 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Rat Race: Sewer Stage</title>
+<title>Rat Race — Sewer Run</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-html,body{margin:0;height:100%;background:#0b1410;color:#e8f5d0;font-family:system-ui,-apple-system,sans-serif;overflow:hidden;touch-action:manipulation}
-#app{display:flex;flex-direction:column;height:100dvh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-#hud{display:flex;gap:6px;padding:6px 8px;font-size:14px;font-weight:700;background:#14231b;border-bottom:2px solid #2d4a36;flex-wrap:wrap}
-.pill{background:#22382a;border-radius:10px;padding:3px 8px}
-#stage{position:relative;flex:1;min-height:0;overflow:hidden;background:
- radial-gradient(ellipse at 50% 0%,rgba(255,230,120,.35),transparent 55%),
- linear-gradient(#1c2b22 0 55%,#2c3a28 55% 62%,#2a5a3c 62%,#1d4a30 100%)}
-#curtL,#curtR{position:absolute;top:0;bottom:0;width:7%;background:repeating-linear-gradient(90deg,#4a1212 0 8px,#661a1a 8px 16px);z-index:3}
-#curtL{left:0}#curtR{right:0}
-#pipes{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 60px,rgba(80,110,90,.25) 60px 70px);}
-#audience{position:absolute;bottom:0;left:0;right:0;height:16%;background:#0a0f0c;z-index:2;display:flex;justify-content:space-around;align-items:flex-end;font-size:20px;overflow:hidden}
-.side{position:absolute;bottom:18%;display:flex;gap:4%;align-items:flex-end;z-index:1}
-#heroes{left:9%}#foes{right:9%;flex-direction:row-reverse}
-.f{position:relative;text-align:center;transition:transform .25s}
-.f .e{font-size:clamp(34px,11vw,64px);line-height:1;filter:drop-shadow(0 4px 2px #0008)}
-.f.big .e{font-size:clamp(60px,22vw,120px)}
-.f .n{font-size:10px;font-weight:700;background:#000a;border-radius:6px;padding:1px 4px;white-space:nowrap}
-.f .hp{height:5px;background:#400;border-radius:3px;margin-top:2px}.f .hp i{display:block;height:100%;background:#6f6;border-radius:3px}
-.f.sel .e{outline:3px dashed #ff0;border-radius:50%}
-.f.dead{opacity:0;transform:scale(.2) rotate(90deg)}
-.pop{position:absolute;z-index:5;font-weight:900;font-size:22px;color:#ff6;text-shadow:2px 2px 0 #000;pointer-events:none;animation:up 1s forwards}
-@keyframes up{to{transform:translateY(-50px);opacity:0}}
-#banner{position:absolute;top:8px;left:8%;right:8%;text-align:center;z-index:6;font-weight:800;font-size:15px;background:#000b;border-radius:10px;padding:6px;pointer-events:none;min-height:1em}
-#cmd{position:absolute;inset:0;z-index:7;display:none;align-items:center;justify-content:center;pointer-events:none}
-#ring{width:120px;height:120px;border:6px solid #ff0;border-radius:50%;position:absolute}
-#gauge{position:absolute;bottom:30%;left:15%;right:15%;height:26px;border:3px solid #fff;border-radius:8px;background:#222;display:none}
-#gauge i{display:block;height:100%;width:0;background:#f80}#gauge b{position:absolute;right:0;top:0;bottom:0;width:18%;background:#3f3a}
-#panel{flex:0 0 auto;padding:8px;background:#14231b;border-top:2px solid #2d4a36;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-#panel button,#abtn,.ov button{font:800 18px system-ui;min-height:58px;border:0;border-radius:14px;color:#111;background:#ffd23f;box-shadow:0 4px 0 #a07800;touch-action:manipulation}
-#panel button:disabled{opacity:.35}
-#panel button.g{background:#8fe36b;box-shadow:0 4px 0 #3c7a24}
-#panel button.b{background:#6bc6ff;box-shadow:0 4px 0 #2a6e9a}
-#panel button.r{background:#ff7a6b;box-shadow:0 4px 0 #9a2f22}
-#abtn{display:none;grid-column:1/3;min-height:124px;font-size:30px;background:#ff4fa3;box-shadow:0 6px 0 #8a1d55;color:#fff}
-.ov{position:fixed;inset:0;z-index:20;background:#0b1410f2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;gap:12px}
-.ov h1{margin:0;font-size:38px;color:#ffd23f;text-shadow:3px 3px 0 #5a3}
-.ov p{max-width:420px;line-height:1.4;margin:0}
-.ov button{width:min(320px,90vw)}
-.hide{display:none!important}
-</style></head><body>
-<div id="app">
- <div id="hud"><span class="pill" id="hHp"></span><span class="pill" id="pHp"></span><span class="pill" id="hFp"></span><span class="pill" id="hSp"></span><span class="pill" id="hDep"></span></div>
- <div id="stage"><div id="pipes"></div><div id="curtL"></div><div id="curtR"></div>
-  <div class="side" id="heroes"></div><div class="side" id="foes"></div>
-  <div id="audience"></div><div id="banner"></div>
-  <div id="cmd"><div id="ring"></div><div id="gauge"><b></b><i></i></div></div>
- </div>
- <div id="panel">
-  <button id="bJump">🦘 Jump</button><button id="bHam">🔨 Hammer</button>
-  <button id="bSpec" class="b">✨ Special</button><button id="bItem" class="g">🧀 Item</button>
-  <button id="abtn">TAP!</button>
- </div>
+html,body{margin:0;height:100%;background:#0a1210;color:#e8f5d0;font-family:system-ui,-apple-system,sans-serif;overflow:hidden;touch-action:none}
+#wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+canvas{display:block;width:100%;height:100%;max-width:100vw;max-height:100vh;background:#0a1210;image-rendering:pixelated;image-rendering:crisp-edges}
+#ui{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column}
+#hud{display:flex;justify-content:space-between;padding:10px 14px;font-size:14px;font-weight:700;text-shadow:0 1px 3px #000;gap:8px;flex-wrap:wrap}
+#hud span{background:rgba(0,0,0,.45);padding:4px 10px;border-radius:8px;border:1px solid rgba(120,200,100,.35)}
+#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,12,10,.82);pointer-events:auto}
+#overlay.hidden{display:none}
+.panel{background:#13241c;border:3px solid #3d8a55;border-radius:16px;padding:22px 20px;max-width:360px;width:92%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.55)}
+.panel h1{margin:0 0 6px;font-size:28px;color:#9dff7a;letter-spacing:1px}
+.panel h2{margin:0 0 12px;font-size:16px;color:#a8c9b0;font-weight:600}
+.panel p{margin:0 0 14px;font-size:13px;line-height:1.45;color:#c5dbc8}
+.btn{display:inline-block;margin:6px 4px;padding:12px 22px;border:0;border-radius:12px;background:#3d8a55;color:#fff;font-weight:800;font-size:16px;cursor:pointer;pointer-events:auto}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:#243830;border:2px solid #3d8a55}
+#pads{position:absolute;left:0;right:0;bottom:0;height:38%;display:none;pointer-events:none;z-index:5}
+#pads.show{display:block}
+.pad{position:absolute;bottom:18px;width:72px;height:72px;border-radius:50%;background:rgba(40,80,55,.55);border:3px solid rgba(100,200,120,.55);pointer-events:auto;display:flex;align-items:center;justify-content:center;font-size:28px;color:#c8ffb0;font-weight:900}
+.pad:active,.pad.on{background:rgba(60,140,80,.75)}
+#padL{left:16px}#padR{left:100px}#padJ{right:16px;width:88px;height:88px;bottom:22px}
+@media(pointer:coarse){#pads.show{display:block}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="c"></canvas>
+<div id="ui">
+  <div id="hud">
+    <span id="hDepth">Depth 1</span>
+    <span id="hCheese">🧀 0</span>
+    <span id="hHP">❤ ❤ ❤</span>
+    <span id="hDist">0m</span>
+  </div>
 </div>
-<div class="ov" id="title"><h1>RAT RACE</h1><p><b>Sewer Stage Showdown</b><br>Turn-based battles on the Sewer Theater stage. Time your taps for Action Commands, Guard enemy hits, wow the crowd for Star Power. Escape endlessly.</p>
-<p style="font-size:13px;opacity:.8">Jump: tap when the ring closes. Hammer: hold, release in the green. Enemy turn: tap right as they hit to GUARD.</p>
-<button id="start">▶ Start the Show</button></div>
-<div class="ov hide" id="over"><h1 id="oT">Game Over</h1><p id="oP"></p><button id="again">Try Again</button></div>
+<div id="pads">
+  <div class="pad" id="padL">◀</div>
+  <div class="pad" id="padR">▶</div>
+  <div class="pad" id="padJ">▲</div>
+</div>
+<div id="overlay">
+  <div class="panel" id="panel">
+    <h1>RAT RACE</h1>
+    <h2>Sewer Run</h2>
+    <p>Escape the office sewer endlessly. Jump platforms, dodge bosses, grab cheese. Desktop: ←→ / A D + Space · Mobile: pads or tap zones.</p>
+    <button class="btn" id="btnStart">START RUN</button>
+  </div>
+</div>
+</div>
 <script>
+(function(){
 "use strict";
-const $=id=>document.getElementById(id);
-const AUTO=/auto=1/.test(location.search);
-const wait=ms=>new Promise(r=>setTimeout(r,AUTO?Math.min(ms,5):ms));
-const R={
- deadline:{n:"Deadline",e:"⏰",hp:4,atk:2,v:"rings alarm"},
- project:{n:"Project",e:"📁",hp:5,atk:2,v:"scope-creeps"},
- customer:{n:"Customer",e:"😡",hp:6,atk:3,v:"demands a refund"},
- ai:{n:"Rogue AI",e:"🤖",hp:5,atk:3,v:"fires a laser"},
- pencil:{n:"Pencil Pusher",e:"✏️",hp:4,atk:2,v:"jabs a pencil"},
- shark:{n:"Spreadsheet Shark",e:"🦈",hp:8,atk:3,v:"bites with formulas"},
- hydra:{n:"Meeting Hydra",e:"🐉",hp:9,atk:3,v:"calls another meeting"},
- hr:{n:"HR Blob",e:"🫠",hp:8,atk:2,v:"files a complaint"},
- chair:{n:"Alligator Chair",e:"🐊",hp:20,atk:4,v:"swivel-chomps",big:1},
- fein:{n:"Sales Fein",e:"👱",hp:4,atk:2,v:"pitches a deal"},
- blain:{n:"Blain Berry",e:"🏈",hp:24,atk:4,v:"throws a football",big:1,col:"#4aa3ff"},
- toad:{n:"Justins Stink",e:"🐸",hp:30,atk:5,v:"throws up on you",big:1}
-};
-const WAVES=[["deadline","project"],["chair","fein","fein"],["toad"],["blain","pencil"],["customer","ai","deadline"],["shark","hr"],["hydra","pencil"]];
-let S;
-function newGame(){S={hp:12,max:12,php:8,pmax:8,fp:6,fmax:6,sp:0,items:3,depth:1,foes:[],sel:0,busy:false};}
-function hud(){$("hHp").textContent=`🐀 Rat ${S.hp}/${S.max}`;$("pHp").textContent=`🪳 Intern Pip ${S.php}/${S.pmax}`;
- $("hFp").textContent=`🌸 FP ${S.fp}/${S.fmax}`;$("hSp").textContent=`⭐ ${S.sp.toFixed(1)}`;$("hDep").textContent=`Depth ${S.depth}`;
- $("bItem").textContent=`🧀 Item x${S.items}`;$("bSpec").textContent=S.sp>=3?"⭐ Star Rush!":"✨ Pip Tackle (2FP)";}
-function say(t){$("banner").textContent=t;}
-function pop(el,t,c){const r=el.getBoundingClientRect(),s=$("stage").getBoundingClientRect();const p=document.createElement("div");p.className="pop";p.textContent=t;if(c)p.style.color=c;
- p.style.left=(r.left-s.left+r.width/2-15)+"px";p.style.top=(r.top-s.top)+"px";$("stage").appendChild(p);setTimeout(()=>p.remove(),1000);}
-function crowd(n){S.sp=Math.min(5,S.sp+n);const a=$("audience");a.style.transform="translateY(-6px)";setTimeout(()=>a.style.transform="",200);}
-function fig(e,n,big,col){const d=document.createElement("div");d.className="f"+(big?" big":"");d.innerHTML=`<div class="e"${col?` style="filter:drop-shadow(0 0 10px ${col})"`:""}>${e}</div><div class="n">${n}</div><div class="hp"><i></i></div>`;return d;}
-function drawHeroes(){const h=$("heroes");h.innerHTML="";S.heroEl=fig("🐀","Rat");S.pipEl=fig("🪳","Pip");h.append(S.heroEl,S.pipEl);bars();}
-function spawn(){const w=WAVES[(S.depth-1)%WAVES.length],sc=1+Math.floor((S.depth-1)/WAVES.length)*.5;
- S.foes=w.map(k=>{const b=R[k];return{...b,k,hp:Math.ceil(b.hp*sc),max:Math.ceil(b.hp*sc),atk:Math.ceil(b.atk*sc)}});
- const f=$("foes");f.innerHTML="";S.foes.forEach((o,i)=>{o.el=fig(o.e,o.n,o.big,o.col);o.el.onclick=()=>{if(o.hp>0){S.sel=i;bars();}};f.appendChild(o.el);});
- S.sel=0;bars();say(`Depth ${S.depth}: ${S.foes.map(f=>f.n).join(", ")} take the stage!`);}
-function bars(){S.foes.forEach((o,i)=>{o.el.querySelector(".hp i").style.width=Math.max(0,o.hp/o.max*100)+"%";o.el.classList.toggle("sel",i===S.sel&&o.hp>0);o.el.classList.toggle("dead",o.hp<=0);});
- if(S.heroEl){S.heroEl.querySelector(".hp i").style.width=S.hp/S.max*100+"%";S.pipEl.querySelector(".hp i").style.width=Math.max(0,S.php/S.pmax*100)+"%";S.pipEl.style.opacity=S.php>0?1:.3;}hud();}
-function alive(){return S.foes.filter(f=>f.hp>0);}
-function target(){let t=S.foes[S.sel];if(!t||t.hp<=0){t=alive()[0];S.sel=S.foes.indexOf(t);}return t;}
-function lock(b){S.busy=b;["bJump","bHam","bSpec","bItem"].forEach(i=>{$(i).disabled=b;$(i).classList.toggle("hide",false)});}
-// ---- Action commands: one big TAP button replaces the panel ----
-function showA(on,label){["bJump","bHam","bSpec","bItem"].forEach(i=>$(i).classList.toggle("hide",on));$("abtn").style.display=on?"block":"none";$("abtn").textContent=label||"TAP!";$("cmd").style.display=on?"flex":"none";}
-function timedTap(ms,win,label){ // resolves true if tapped within last `win` ms of `ms`
- return new Promise(res=>{showA(true,label);const ring=$("ring"),g=$("gauge");g.style.display="none";ring.style.display="block";
-  const t0=performance.now();let done=false;
-  const fin=v=>{if(done)return;done=true;$("abtn").onpointerdown=null;ring.style.display="none";showA(false);res(v);};
-  const anim=()=>{if(done)return;const p=(performance.now()-t0)/ms;ring.style.transform=`scale(${Math.max(.15,1.8-1.65*p)})`;ring.style.borderColor=p>1-win/ms?"#3f3":"#ff0";if(p>=1.15)fin(false);else requestAnimationFrame(anim);};anim();
-  $("abtn").onpointerdown=e=>{e.preventDefault();const dt=performance.now()-t0;fin(dt>=ms-win&&dt<=ms*1.15);};
-  if(AUTO)setTimeout(()=>fin(true),1);});}
-function holdGauge(){return new Promise(res=>{showA(true,"HOLD… release in green");const g=$("gauge"),bar=g.querySelector("i");g.style.display="block";$("ring").style.display="none";
-  let t0=0,done=false,raf;const fin=v=>{if(done)return;done=true;cancelAnimationFrame(raf);g.style.display="none";$("abtn").onpointerdown=$("abtn").onpointerup=null;showA(false);res(v);};
-  const anim=()=>{const p=(performance.now()-t0)/1400;bar.style.width=Math.min(100,p*100)+"%";if(p>1.25)fin(false);else raf=requestAnimationFrame(anim);};
-  $("abtn").onpointerdown=e=>{e.preventDefault();if(!t0){t0=performance.now();anim();}};
-  $("abtn").onpointerup=()=>{if(!t0)return;const p=(performance.now()-t0)/1400;fin(p>=.82&&p<=1.1);};
-  setTimeout(()=>{if(!t0)fin(false)},4000);if(AUTO)setTimeout(()=>fin(true),1);});}
-async function hit(o,d,tag){o.hp-=d;o.el.style.transform="translateX(10px)";setTimeout(()=>o.el.style.transform="",150);pop(o.el,(tag?tag+" ":"")+d);bars();await wait(350);}
-async function stylish(){const ok=await timedTap(450,200,"STYLISH?");if(ok){say("Stylish! The crowd goes wild!");crowd(.7);pop(S.heroEl,"STYLISH!","#f6f");}}
-async function act(kind){if(S.busy)return;lock(true);const t=target();
- if(kind==="jump"){say("Jump! Tap when the ring closes on landing.");S.heroEl.style.transform="translate(40px,-60px)";
-  let ok=await timedTap(900,220,"TAP on landing!");await hit(t,1,"");
-  if(ok){say("Nice! Bounce!");crowd(.5);ok=await timedTap(700,200,"TAP again!");if(t.hp>0)await hit(t,ok?2:1,ok?"Great!":"");if(ok){crowd(.5);await stylish();}}
-  S.heroEl.style.transform="";}
- else if(kind==="ham"){say("Hammer! Hold the button, release in the green zone.");const ok=await holdGauge();await hit(t,ok?4:2,ok?"Nice!":"");if(ok){crowd(.6);await stylish();}}
- else if(kind==="spec"){if(S.sp>=3){S.sp-=3;say("⭐ STAR RUSH! Tap fast!");let n=0;for(let i=0;i<3;i++){if(await timedTap(500,250,"TAP!"))n++;}for(const o of alive())await hit(o,2+n,"⭐");}
-  else{if(S.fp<2||S.php<=0){say(S.php<=0?"Pip is out cold!":"Not enough FP!");lock(false);return;}S.fp-=2;say("Intern Pip tackles everyone! Time it!");S.pipEl.style.transform="translateX(80px)";
-   const ok=await timedTap(800,220,"TAP!");for(const o of alive())await hit(o,ok?3:1,ok?"Good!":"");if(ok)crowd(.5);S.pipEl.style.transform="";}}
- else if(kind==="item"){if(S.items<=0){say("No cheese left!");lock(false);return;}S.items--;S.hp=Math.min(S.max,S.hp+6);S.php=Math.min(S.pmax,S.php+4);S.fp=Math.min(S.fmax,S.fp+2);pop(S.heroEl,"+6 HP","#6f6");say("Ate Sewer Cheese. Tasty-ish.");bars();await wait(600);}
- await afterPlayer();}
-async function afterPlayer(){if(!alive().length)return win();await enemyPhase();}
-async function enemyPhase(){for(const o of alive()){if(S.hp<=0)break;
-  const tgtPip=S.php>0&&Math.random()<.35,el=tgtPip?S.pipEl:S.heroEl;
-  say(`${o.n} ${o.v}${tgtPip?" at Pip":""}! Tap right on impact to GUARD!`);o.el.style.transform="translateX(-40px)";await wait(200);
-  const g=await timedTap(850,180,"GUARD!");o.el.style.transform="";
-  let d=Math.max(0,o.atk-(g?1:0));if(g){pop(el,"GUARD!","#6cf");crowd(.4);}if(tgtPip)S.php=Math.max(0,S.php-d);else S.hp=Math.max(0,S.hp-d);pop(el,"-"+d,"#f55");bars();await wait(400);}
- S.fp=Math.min(S.fmax,S.fp+1);S.turns=(S.turns||0)+1;
- if(S.hp<=0)return over(false);say("Your turn! Pick an action. Tap a foe to target.");lock(false);}
-async function win(){say(`Depth ${S.depth} cleared! The crowd tosses cheese.`);crowd(1);S.items++;await wait(1200);S.depth++;S.max+=1;S.hp=Math.min(S.max,S.hp+4);S.php=Math.max(S.php,Math.min(S.pmax,S.php+4));spawn();lock(false);S.wins=(S.wins||0)+1;}
-function over(){$("oT").textContent="Rat Race Over";$("oP").textContent=`You escaped to Depth ${S.depth}. The grind continues…`;$("over").classList.remove("hide");}
-function begin(){newGame();$("title").classList.add("hide");$("over").classList.add("hide");$("audience").innerHTML="👤👥👤👥👤👥👤👥👤".split("").length?"🐀 🐁 🐀 🐁 🐀 🐁 🐀".split(" ").map(c=>`<span>${c}</span>`).join(""):"";drawHeroes();spawn();lock(false);}
-$("bJump").onclick=()=>act("jump");$("bHam").onclick=()=>act("ham");$("bSpec").onclick=()=>act("spec");$("bItem").onclick=()=>act("item");
-$("start").onclick=begin;$("again").onclick=begin;
-window.__rr={begin,act,get S(){return S}};
-</script></body></html>
+const cvs=document.getElementById("c");
+const ctx=cvs.getContext("2d");
+const overlay=document.getElementById("overlay");
+const panel=document.getElementById("panel");
+const pads=document.getElementById("pads");
+const padL=document.getElementById("padL");
+const padR=document.getElementById("padR");
+const padJ=document.getElementById("padJ");
+
+let W=960,H=540,SCALE=1;
+function resize(){
+  const r=window.devicePixelRatio||1;
+  W=Math.min(960,window.innerWidth);
+  H=Math.min(540,window.innerHeight);
+  if(window.innerWidth<700){W=window.innerWidth;H=window.innerHeight;}
+  cvs.width=Math.floor(W*r);cvs.height=Math.floor(H*r);
+  cvs.style.width=W+"px";cvs.style.height=H+"px";
+  SCALE=r;ctx.setTransform(r,0,0,r,0,0);ctx.imageSmoothingEnabled=false;
+}
+window.addEventListener("resize",resize);resize();
+
+const keys={};
+const touch={l:0,r:0,j:0};
+window.addEventListener("keydown",e=>{
+  keys[e.code]=1;
+  if(["ArrowLeft","ArrowRight","ArrowUp","Space"].includes(e.code))e.preventDefault();
+});
+window.addEventListener("keyup",e=>{keys[e.code]=0});
+
+function bindPad(el,key){
+  const on=e=>{e.preventDefault();touch[key]=1;el.classList.add("on")};
+  const off=e=>{e.preventDefault();touch[key]=0;el.classList.remove("on")};
+  el.addEventListener("touchstart",on,{passive:false});
+  el.addEventListener("touchend",off,{passive:false});
+  el.addEventListener("touchcancel",off,{passive:false});
+  el.addEventListener("mousedown",on);
+  el.addEventListener("mouseup",off);
+  el.addEventListener("mouseleave",off);
+}
+bindPad(padL,"l");bindPad(padR,"r");bindPad(padJ,"j");
+
+// Tap zones: left third = left, right third = right, upper half jump (outside pads)
+cvs.addEventListener("touchstart",e=>{
+  if(state!=="play")return;
+  for(const t of e.changedTouches){
+    const rect=cvs.getBoundingClientRect();
+    const x=(t.clientX-rect.left)/rect.width;
+    const y=(t.clientY-rect.top)/rect.height;
+    if(y>0.62)continue; // pads area
+    if(x<0.33)touch.l=1;
+    else if(x>0.67)touch.r=1;
+    else touch.j=1;
+  }
+},{passive:true});
+cvs.addEventListener("touchend",e=>{
+  touch.l=0;touch.r=0;touch.j=0;
+  padL.classList.remove("on");padR.classList.remove("on");padJ.classList.remove("on");
+},{passive:true});
+
+function left(){return keys.ArrowLeft||keys.KeyA||touch.l}
+function right(){return keys.ArrowRight||keys.KeyD||touch.r}
+function jumpPressed(){return keys.ArrowUp||keys.KeyW||keys.Space||touch.j}
+
+// ---- Pixel sprite helpers ----
+function px(x,y,s,col){ctx.fillStyle=col;ctx.fillRect(Math.floor(x),Math.floor(y),s,s)}
+function rect(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(Math.floor(x),Math.floor(y),Math.ceil(w),Math.ceil(h))}
+
+function drawRat(x,y,facing,frame,inv){
+  if(inv&&Math.floor(inv*20)%2===0)return;
+  const s=3;const f=facing<0?-1:1;
+  ctx.save();ctx.translate(x,y);ctx.scale(f,1);
+  // body
+  rect(-8*s,-14*s,16*s,12*s,"#8a6a4a");
+  rect(-7*s,-13*s,14*s,10*s,"#b8895c");
+  // belly
+  rect(-4*s,-8*s,8*s,5*s,"#d4b08a");
+  // head
+  rect(-6*s,-20*s,12*s,8*s,"#b8895c");
+  rect(-5*s,-19*s,10*s,6*s,"#c99a6b");
+  // snout
+  rect(2*s,-16*s,7*s,4*s,"#d4b08a");
+  px(8*s,-15*s,s,"#222");
+  // ears
+  rect(-7*s,-24*s,4*s,4*s,"#b8895c");
+  rect(-1*s,-24*s,4*s,4*s,"#b8895c");
+  rect(-6*s,-23*s,2*s,2*s,"#e8a0a0");
+  rect(0,-23*s,2*s,2*s,"#e8a0a0");
+  // eye
+  px(1*s,-18*s,s*2,"#111");
+  px(1.5*s,-17.5*s,s,"#fff");
+  // legs
+  const leg=Math.floor(frame/4)%2;
+  rect(-7*s,-2*s,4*s,5*s+(leg?2:0),"#8a6a4a");
+  rect(2*s,-2*s,4*s,5*s+(leg?0:2),"#8a6a4a");
+  // tail
+  rect(-14*s,-10*s,6*s,2*s,"#d48a8a");
+  rect(-16*s,-12*s,3*s,2*s,"#d48a8a");
+  ctx.restore();
+}
+
+function drawEnemy(e,camX){
+  const x=e.x-camX,y=e.y;
+  const s=2.5;
+  ctx.save();
+  if(e.facing<0){ctx.translate(x,y);ctx.scale(-1,1);ctx.translate(0,0);}
+  else ctx.translate(x,y);
+  const flip=e.facing<0;
+  switch(e.kind){
+    case "deadline":{
+      rect(-10*s,-18*s,20*s,16*s,"#c44040");
+      rect(-9*s,-17*s,18*s,14*s,"#e85858");
+      rect(-7*s,-14*s,14*s,3*s,"#fff");
+      ctx.fillStyle="#111";ctx.font="bold 10px monospace";ctx.textAlign="center";
+      ctx.fillText("DUE",0,-8*s);
+      px(-5*s,-16*s,s*2,"#111");px(3*s,-16*s,s*2,"#111");
+      break;
+    }
+    case "sales":{
+      // blond Sales Fein
+      rect(-8*s,-20*s,16*s,14*s,"#3a6ea5");
+      rect(-6*s,-28*s,12*s,10*s,"#f0d080");
+      rect(-5*s,-27*s,10*s,4*s,"#f5e0a0"); // blond hair
+      px(-3*s,-24*s,s*2,"#224");px(2*s,-24*s,s*2,"#224");
+      rect(-4*s,-6*s,3*s,6*s,"#2a4060");rect(1*s,-6*s,3*s,6*s,"#2a4060");
+      break;
+    }
+    case "blain":{
+      // Blue Coach Blain Berry
+      rect(-10*s,-22*s,20*s,16*s,"#1e4a9a");
+      rect(-8*s,-30*s,16*s,10*s,"#e8b890");
+      rect(-7*s,-32*s,14*s,4*s,"#1a3a7a"); // cap
+      px(-4*s,-27*s,s*2,"#111");px(2*s,-27*s,s*2,"#111");
+      rect(-3*s,-22*s,6*s,3*s,"#fff");
+      rect(-8*s,-6*s,5*s,6*s,"#142e60");rect(3*s,-6*s,5*s,6*s,"#142e60");
+      break;
+    }
+    case "stink":{
+      // Justins Stink toad
+      rect(-14*s,-16*s,28*s,14*s,"#3a9a40");
+      rect(-12*s,-14*s,24*s,10*s,"#4eba50");
+      rect(-10*s,-24*s,20*s,10*s,"#3a9a40");
+      px(-6*s,-20*s,s*3,"#fff");px(3*s,-20*s,s*3,"#fff");
+      px(-5*s,-19*s,s*2,"#111");px(4*s,-19*s,s*2,"#111");
+      rect(-4*s,-12*s,8*s,4*s,"#2a6a30");
+      break;
+    }
+    case "chair":{
+      // Alligator Chair
+      rect(-12*s,-8*s,24*s,6*s,"#2d5a30"); // seat
+      rect(-14*s,-20*s,6*s,14*s,"#2d5a30"); // back
+      rect(-13*s,-28*s,18*s,10*s,"#3d7a40"); // gator head on back
+      px(-8*s,-25*s,s*2,"#f0e060");px(-4*s,-25*s,s*2,"#f0e060");
+      rect(-10*s,-22*s,12*s,3*s,"#1a3a20");
+      // legs of chair
+      rect(-10*s,-2*s,3*s,6*s,"#1a3020");rect(6*s,-2*s,3*s,6*s,"#1a3020");
+      break;
+    }
+    case "shark":{
+      rect(-16*s,-12*s,28*s,10*s,"#4a6080");
+      rect(-14*s,-10*s,20*s,6*s,"#5a7090");
+      // fin
+      rect(-2*s,-18*s,6*s,8*s,"#3a5060");
+      px(8*s,-10*s,s*2,"#fff");px(9*s,-9*s,s,"#111");
+      // grid belly
+      for(let i=0;i<4;i++)rect(-10*s+i*5*s,-6*s,1,4*s,"#c0d0e0");
+      break;
+    }
+    case "hydra":{
+      rect(-10*s,-10*s,20*s,10*s,"#6a4a8a");
+      for(let i=0;i<3;i++){
+        const ox=(i-1)*8*s;
+        rect(ox-4*s,-22*s,8*s,14*s,"#7a5a9a");
+        px(ox-2*s,-20*s,s*2,"#f0e060");
+      }
+      break;
+    }
+    case "hr":{
+      rect(-12*s,-14*s,24*s,14*s,"#8a6aaa");
+      rect(-10*s,-12*s,20*s,10*s,"#a080c0");
+      // blob eyes
+      px(-5*s,-10*s,s*3,"#fff");px(2*s,-10*s,s*3,"#fff");
+      px(-4*s,-9*s,s*2,"#111");px(3*s,-9*s,s*2,"#111");
+      ctx.fillStyle="#fff";ctx.font="bold 8px sans-serif";ctx.textAlign="center";
+      ctx.fillText("HR",0,-2*s);
+      break;
+    }
+    case "boss":{
+      rect(-14*s,-24*s,28*s,20*s,"#2a2a3a");
+      rect(-12*s,-22*s,24*s,16*s,"#3a3a4a");
+      rect(-8*s,-32*s,16*s,10*s,"#e0b090");
+      rect(-9*s,-34*s,18*s,4*s,"#1a1a1a"); // hair
+      px(-4*s,-28*s,s*2,"#111");px(2*s,-28*s,s*2,"#111");
+      rect(-10*s,-4*s,6*s,6*s,"#222");rect(4*s,-4*s,6*s,6*s,"#222");
+      break;
+    }
+    default:
+      rect(-8*s,-14*s,16*s,12*s,"#888");
+  }
+  ctx.restore();
+  // name tag small
+  if(e.boss){
+    ctx.fillStyle="rgba(0,0,0,.55)";
+    ctx.fillRect(x-40,y-e.h-18,80,14);
+    ctx.fillStyle="#9dff7a";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
+    ctx.fillText(e.label||e.kind,x,y-e.h-7);
+  }
+}
+
+function drawProjectile(p,camX){
+  const x=p.x-camX,y=p.y;
+  if(p.kind==="football"){
+    rect(x-6,y-4,12,8,"#8B4513");
+    rect(x-4,y-2,8,4,"#A0522D");
+    rect(x-1,y-3,2,6,"#fff");
+  }else if(p.kind==="puke"){
+    rect(x-5,y-5,10,10,"#6a9a30");
+    rect(x-3,y-3,6,6,"#8aba40");
+  }else if(p.kind==="laser"){
+    rect(x-8,y-2,16,4,"#ff4040");
+  }else{
+    rect(x-4,y-4,8,8,"#ccc");
+  }
+}
+
+function drawCheese(x,y,camX,t){
+  const bob=Math.sin(t*0.008+x)*3;
+  const px=x-camX,py=y+bob;
+  rect(px-6,py-5,12,10,"#f0c040");
+  rect(px-5,py-4,10,8,"#ffd860");
+  pxHole(px-2,py-1);pxHole(px+2,py+1);
+  function pxHole(hx,hy){rect(hx,hy,2,2,"#c9a020")}
+}
+
+function drawPlatform(p,camX){
+  const x=p.x-camX;
+  if(x+p.w<-20||x>W+20)return;
+  // sewer brick
+  rect(x,p.y,p.w,p.h,"#2a3a32");
+  rect(x,p.y,p.w,4,"#3d5a48");
+  for(let i=0;i<p.w;i+=16){
+    rect(x+i,p.y+4,14,p.h-6,"#334840");
+    rect(x+i+1,p.y+5,12,3,"#456055");
+  }
+  if(p.hazard){
+    for(let i=0;i<p.w;i+=10){
+      rect(x+i,p.y-6,6,6,"#5a8a40");
+    }
+  }
+}
+
+function drawBg(camX,depth){
+  // gradient sewer
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#0d1a16");g.addColorStop(1,"#152820");
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // parallax pipes
+  ctx.fillStyle="#1a2e26";
+  for(let i=0;i<8;i++){
+    const px=((i*140)-camX*0.3)%(W+140)-40;
+    rect(px,40+i%3*30,28,H);
+    rect(px-4,80+i%3*40,36,12,"#243830");
+  }
+  // drip
+  ctx.fillStyle="rgba(80,140,100,.25)";
+  for(let i=0;i<12;i++){
+    const dx=((i*97+depth*13)-camX*0.5)%(W+40);
+    rect(dx,0,2,30+(i*17)%80);
+  }
+  // murky water at bottom
+  rect(0,H-18,W,18,"#1a3a28");
+  rect(0,H-18,W,4,"#2a5a40");
+}
+
+// ---- Game state ----
+let state="menu"; // menu | play | dead | windepth
+let player,camera,entities,platforms,pickups,projectiles,particles;
+let depth,score,cheese,distMax,invuln,frame,spawnX;
+let jumpBuf=0,coyote=0,wasJump=0;
+
+function makePlayer(){
+  return{x:80,y:200,vx:0,vy:0,w:28,h:40,onGround:0,facing:1,hp:3,maxHp:3,alive:1};
+}
+
+function hit(ax,ay,aw,ah,b){
+  return ax<b.x+b.w&&ax+aw>b.x&&ay<b.y+b.h&&ay+ah>b.y;
+}
+
+function addPlat(x,y,w,h,hazard){
+  platforms.push({x,y,w,h:h||18,hazard:!!hazard});
+}
+
+function addEnemy(kind,x,y,opts){
+  opts=opts||{};
+  const sizes={
+    deadline:{w:36,h:36,hp:1,spd:1.2},
+    sales:{w:32,h:44,hp:1,spd:1.6},
+    blain:{w:40,h:48,hp:3,spd:0.8},
+    stink:{w:48,h:40,hp:4,spd:0.5},
+    chair:{w:44,h:48,hp:5,spd:0.7},
+    shark:{w:50,h:32,hp:2,spd:2.0},
+    hydra:{w:40,h:44,hp:3,spd:1.0},
+    hr:{w:40,h:36,hp:2,spd:0.9},
+    boss:{w:48,h:52,hp:8,spd:1.1}
+  };
+  const s=sizes[kind]||sizes.deadline;
+  entities.push({
+    kind,x,y,w:s.w,h:s.h,hp:opts.hp||s.hp,maxHp:opts.hp||s.hp,
+    vx:(opts.vx!=null?opts.vx:s.spd),vy:0,facing:1,
+    alive:1,boss:!!opts.boss,label:opts.label||"",
+    timer:0,phase:0,anchorX:x,anchorY:y,orbit:opts.orbit||0,orbitR:opts.orbitR||60,orbitA:opts.orbitA||0
+  });
+}
+
+function buildDepth(d){
+  platforms=[];entities=[];pickups=[];projectiles=[];particles=[];
+  const groundY=H-60;
+  // starting ledge
+  addPlat(0,groundY,280,40);
+  let x=300;
+  const len=3200+d*400;
+  spawnX=len-200;
+
+  // generate stretch
+  while(x<len){
+    const gap=40+Math.random()*50+Math.min(d*4,40);
+    x+=gap;
+    const w=90+Math.random()*140;
+    const yOff=(Math.random()<0.45)?-(40+Math.random()*90):0;
+    const y=groundY+yOff;
+    addPlat(x,y,w,18);
+    // cheese
+    if(Math.random()<0.55)pickups.push({x:x+w/2,y:y-28,got:0});
+    // floating mid platforms
+    if(Math.random()<0.35){
+      const fy=y-70-Math.random()*50;
+      const fw=60+Math.random()*80;
+      addPlat(x+20,fy,fw,16);
+      if(Math.random()<0.5)pickups.push({x:x+20+fw/2,y:fy-28,got:0});
+    }
+    // hazard slime platform occasionally
+    if(d>1&&Math.random()<0.12){
+      addPlat(x+w*0.3,y-2,40,16,true);
+    }
+    // enemies along path
+    if(Math.random()<0.4+d*0.05){
+      const kinds=d===1?["deadline","sales","hr"]
+        :d===2?["deadline","sales","shark","hr"]
+        :d===3?["deadline","sales","shark","hydra","hr"]
+        :["deadline","sales","shark","hydra","hr","boss"];
+      const k=kinds[Math.floor(Math.random()*kinds.length)];
+      addEnemy(k,x+w*0.5,y-sizesY(k),{});
+    }
+    x+=w;
+  }
+  // end ground + goal flag area
+  addPlat(len,groundY,400,40);
+  for(let i=0;i<5;i++)pickups.push({x:len+60+i*40,y:groundY-28,got:0});
+
+  // Boss encounters by depth
+  if(d===1){
+    // warm-up: Spreadsheet Shark patrol
+    addEnemy("shark",900,groundY-32,{});
+  }
+  if(d===2){
+    // Giant Alligator Chair + orbiting Sales Feins
+    const bx=len*0.55,by=groundY-50;
+    addEnemy("chair",bx,by,{boss:1,label:"ALLIGATOR CHAIR",hp:10,vx:0.6});
+    for(let i=0;i<4;i++){
+      addEnemy("sales",bx,by,{orbit:1,orbitR:70+i*8,orbitA:i*(Math.PI/2),hp:1});
+    }
+  }
+  if(d===3){
+    addEnemy("stink",len*0.5,groundY-42,{boss:1,label:"JUSTINS STINK",hp:12,vx:0.4});
+  }
+  if(d===4){
+    addEnemy("blain",len*0.45,groundY-50,{boss:1,label:"BLAIN BERRY",hp:10,vx:0.7});
+  }
+  if(d>=5){
+    addEnemy("hydra",len*0.4,groundY-46,{boss:1,label:"MEETING HYDRA",hp:10,vx:0.8});
+    addEnemy("boss",len*0.7,groundY-54,{boss:1,label:"THE BOSS",hp:14,vx:1.0});
+  }
+
+  // fill floor water death zone conceptually via y>H
+  player.x=60;player.y=groundY-50;player.vx=0;player.vy=0;
+  camera={x:0,y:0};
+  distMax=len+200;
+}
+
+function sizesY(k){
+  const m={deadline:36,sales:44,blain:48,stink:40,chair:48,shark:32,hydra:44,hr:36,boss:52};
+  return m[k]||36;
+}
+
+function startRun(){
+  depth=1;score=0;cheese=0;invuln=0;frame=0;
+  player=makePlayer();
+  buildDepth(depth);
+  state="play";
+  overlay.classList.add("hidden");
+  pads.classList.add("show");
+  updateHud();
+}
+
+function nextDepth(){
+  depth++;
+  player.hp=Math.min(player.maxHp,player.hp+1);
+  buildDepth(depth);
+  invuln=60;
+  state="play";
+  overlay.classList.add("hidden");
+  updateHud();
+}
+
+function gameOver(){
+  state="dead";
+  pads.classList.remove("show");
+  overlay.classList.remove("hidden");
+  panel.innerHTML=`<h1>FLUSHED</h1><h2>Depth ${depth} · ${cheese} cheese · ${Math.floor(player.x/10)}m</h2>
+    <p>The sewer claims another status update.</p>
+    <button class="btn" id="btnStart">TRY AGAIN</button>`;
+  document.getElementById("btnStart").onclick=startRun;
+}
+
+function depthClear(){
+  state="windepth";
+  overlay.classList.remove("hidden");
+  panel.innerHTML=`<h1>DEPTH ${depth} CLEARED</h1><h2>+1 HP · Keep descending</h2>
+    <p>More deadlines await below.</p>
+    <button class="btn" id="btnStart">NEXT DEPTH</button>`;
+  document.getElementById("btnStart").onclick=nextDepth;
+}
+
+function updateHud(){
+  document.getElementById("hDepth").textContent="Depth "+depth;
+  document.getElementById("hCheese").textContent="🧀 "+cheese;
+  document.getElementById("hHP").textContent="❤ ".repeat(Math.max(0,player.hp)).trim()||"☠";
+  document.getElementById("hDist").textContent=Math.floor(Math.max(0,player.x)/10)+"m";
+}
+
+function hurt(n){
+  if(invuln>0||!player.alive)return;
+  player.hp-=n||1;
+  invuln=90;
+  player.vy=-6;player.vx*=-0.5;
+  if(player.hp<=0){player.alive=0;gameOver()}
+  updateHud();
+}
+
+function solidAt(px,py,pw,ph){
+  for(const p of platforms){
+    if(hit(px,py,pw,ph,p))return p;
+  }
+  return null;
+}
+
+function updatePlayer(){
+  const spd=3.2,accel=0.55,fric=0.75,grav=0.45,jumpV=-10.2;
+  let mx=0;
+  if(left())mx=-1;
+  if(right())mx=1;
+  if(mx){player.vx+=mx*accel;player.facing=mx;player.vx=Math.max(-spd,Math.min(spd,player.vx))}
+  else player.vx*=fric;
+  if(Math.abs(player.vx)<0.05)player.vx=0;
+
+  const jp=jumpPressed();
+  if(jp&&!wasJump)jumpBuf=8;
+  wasJump=jp?1:0;
+  if(jumpBuf>0)jumpBuf--;
+  if(player.onGround)coyote=8;
+  else if(coyote>0)coyote--;
+
+  if(jumpBuf>0&&coyote>0){
+    player.vy=jumpV;player.onGround=0;jumpBuf=0;coyote=0;
+  }
+  player.vy+=grav;
+  if(player.vy>12)player.vy=12;
+
+  // move X
+  player.x+=player.vx;
+  let hitP=solidAt(player.x,player.y,player.w,player.h);
+  if(hitP){
+    if(player.vx>0)player.x=hitP.x-player.w;
+    else if(player.vx<0)player.x=hitP.x+hitP.w;
+    player.vx=0;
+  }
+  // move Y
+  player.y+=player.vy;
+  player.onGround=0;
+  hitP=solidAt(player.x,player.y,player.w,player.h);
+  if(hitP){
+    if(player.vy>0){
+      player.y=hitP.y-player.h;player.vy=0;player.onGround=1;
+      if(hitP.hazard)hurt(1);
+    }else if(player.vy<0){
+      player.y=hitP.y+hitP.h;player.vy=0;
+    }
+  }
+  // pit
+  if(player.y>H+40)hurt(1),player.y=100,player.vy=0,player.x=Math.max(40,player.x-80);
+
+  // camera
+  camera.x=player.x-W*0.35;
+  if(camera.x<0)camera.x=0;
+}
+
+function updateEnemies(){
+  for(const e of entities){
+    if(!e.alive)continue;
+    e.timer++;
+    if(e.orbit){
+      e.orbitA+=0.04;
+      const host=entities.find(h=>h.kind==="chair"&&h.boss&&h.alive);
+      const cx=host?host.x+host.w/2:e.anchorX;
+      const cy=host?host.y:e.anchorY;
+      e.x=cx+Math.cos(e.orbitA)*e.orbitR-e.w/2;
+      e.y=cy+Math.sin(e.orbitA)*e.orbitR*0.35-e.h/2;
+      e.facing=Math.cos(e.orbitA)>0?1:-1;
+    }else{
+      // patrol
+      e.x+=e.vx;
+      e.facing=e.vx>=0?1:-1;
+      // turn at edges / walls
+      const foot=solidAt(e.x+e.w/2-2,e.y+e.h+1,4,4);
+      const wall=solidAt(e.x+(e.vx>0?e.w:-4),e.y+4,4,e.h-8);
+      if(!foot||wall)e.vx*=-1;
+      // gravity light
+      if(!solidAt(e.x,e.y+1,e.w,e.h)){
+        e.vy=(e.vy||0)+0.3;e.y+=e.vy;
+        const g=solidAt(e.x,e.y,e.w,e.h);
+        if(g){e.y=g.y-e.h;e.vy=0}
+      }
+    }
+    // attacks
+    if(e.kind==="blain"&&e.timer%90===0){
+      projectiles.push({x:e.x+e.w/2,y:e.y+10,vx:e.facing*4.5,vy:-1.5,kind:"football",life:120});
+    }
+    if(e.kind==="stink"&&e.timer%70===0){
+      for(let i=-1;i<=1;i++){
+        projectiles.push({x:e.x+e.w/2,y:e.y+e.h*0.4,vx:i*1.8+e.facing*1.2,vy:2.5,kind:"puke",life:100});
+      }
+    }
+    if(e.kind==="shark"&&e.timer%100===40){
+      projectiles.push({x:e.x+(e.facing>0?e.w:0),y:e.y+10,vx:e.facing*6,vy:0,kind:"laser",life:80});
+    }
+    if(e.kind==="boss"&&e.timer%110===0){
+      projectiles.push({x:e.x+e.w/2,y:e.y+20,vx:e.facing*5,vy:0,kind:"laser",life:90});
+    }
+    // stomp / touch
+    if(hit(player.x,player.y,player.w,player.h,e)){
+      if(player.vy>0&&player.y+player.h-e.y<16){
+        // stomp
+        e.hp--;player.vy=-8;
+        if(e.hp<=0){e.alive=0;score+=100;cheese+=e.boss?3:0;updateHud()}
+      }else hurt(1);
+    }
+  }
+}
+
+function updateProjectiles(){
+  for(const p of projectiles){
+    p.x+=p.vx;p.y+=p.vy;p.life--;
+    if(p.kind==="puke")p.vy+=0.15;
+    if(p.kind==="football")p.vy+=0.12;
+    if(hit(player.x+4,player.y+4,player.w-8,player.h-8,{x:p.x-6,y:p.y-6,w:12,h:12})){
+      hurt(1);p.life=0;
+    }
+  }
+  projectiles=projectiles.filter(p=>p.life>0);
+}
+
+function updatePickups(){
+  for(const c of pickups){
+    if(c.got)continue;
+    if(hit(player.x,player.y,player.w,player.h,{x:c.x-8,y:c.y-8,w:16,h:16})){
+      c.got=1;cheese++;score+=50;updateHud();
+    }
+  }
+}
+
+function update(){
+  if(state!=="play")return;
+  frame++;
+  if(invuln>0)invuln--;
+  updatePlayer();
+  updateEnemies();
+  updateProjectiles();
+  updatePickups();
+  updateHud();
+  if(player.x>=distMax-100)depthClear();
+}
+
+function draw(){
+  drawBg(camera.x,depth);
+  for(const p of platforms)drawPlatform(p,camera.x);
+  for(const c of pickups)if(!c.got)drawCheese(c.x,c.y,camera.x,frame);
+  for(const e of entities)if(e.alive)drawEnemy(e,camera.x);
+  for(const p of projectiles)drawProjectile(p,camera.x);
+  if(player&&player.alive!==0||state==="play"){
+    drawRat(player.x-camera.x+player.w/2,player.y+player.h,player.facing,frame+(player.vx?4:0),invuln);
+  }
+  // goal marker
+  if(state==="play"){
+    const gx=distMax-80-camera.x;
+    if(gx>-20&&gx<W+20){
+      rect(gx,H-200,6,140,"#9dff7a");
+      rect(gx,H-200,40,24,"#3d8a55");
+      ctx.fillStyle="#fff";ctx.font="bold 10px sans-serif";ctx.textAlign="left";
+      ctx.fillText("OUT",gx+6,H-184);
+    }
+  }
+}
+
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+document.getElementById("btnStart").onclick=startRun;
+// show pads on coarse pointers
+if(window.matchMedia("(pointer:coarse)").matches)pads.classList.add("show");
+
+loop();
+})();
+</script>
+</body>
+</html>
