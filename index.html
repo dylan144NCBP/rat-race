@@ -2,8 +2,8 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>Rat Race</title>
 <style>
-html,body{margin:0;height:100%;background:#0b120c;overflow:hidden;font-family:monospace;color:#cfe8b0}
-#wrap{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column}
+html,body{margin:0;height:100%;background:#0b120c;overflow:hidden;font-family:monospace;color:#cfe8b0;touch-action:none;-webkit-user-select:none;user-select:none}
+#wrap{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;touch-action:none}
 canvas{background:#142016;image-rendering:pixelated;box-shadow:0 0 30px #000;border:3px solid #2c3a22;touch-action:none}
 #touch{display:none;gap:10px;margin-top:8px}
 #touch button{font:bold 20px monospace;padding:14px 22px;background:#2c3a22;color:#d8f0a0;border:2px solid #5a7a3a;border-radius:8px}
@@ -55,9 +55,9 @@ const ABIL=[
 let selG=0,selA=0,shield=0,shT=0,abCd=0,slowT=0,dashT=0,dashDir=1;
 function goLoad(){state='load'}
 function startRun(){reset();state='play'}
-function useAbility(){if(state!=='play'||abCd>0)return;if(selA===1){dashDir=(keys.ArrowLeft||keys.KeyA)?-1:1;dashT=10;inv=Math.max(inv,30);abCd=90;beep(1000,.1,'triangle')}else if(selA===2){slowT=240;abCd=900;quip='COFFEE BREAK!';quipT=60;beep(300,.4,'sine',.08)}}
+function useAbility(){if(state!=='play'||abCd>0)return;if(selA===1){dashDir=(keys.ArrowLeft||keys.KeyA||padL)?-1:1;dashT=10;inv=Math.max(inv,30);abCd=90;beep(1000,.1,'triangle')}else if(selA===2){slowT=240;abCd=900;quip='COFFEE BREAK!';quipT=60;beep(300,.4,'sine',.08)}}
 const QUIPS=['Per my last email...','Circling back!','Quick sync?','This is due EOD.','Can you hop on a call?','Let\'s take this offline.','New priorities!','Synergy incoming!'];
-let state='start',keys={},p,bullets,ebul,enemies,parts,score,lives,wave,dir,speed,stepT,hi=+localStorage.ratHi||0,inv,quip,quipT,ufo,t=0,cool;
+let state='start',keys={},padL=0,padR=0,p,bullets,ebul,enemies,parts,score,lives,wave,dir,speed,stepT,hi=+localStorage.ratHi||0,inv,quip,quipT,ufo,t=0,cool;
 function reset(){p={x:W/2,w:30};bullets=[];ebul=[];parts=[];score=0;lives=3+(selA===3?1:0);wave=0;inv=0;ufo=null;shield=selA===0?1:0;shT=0;abCd=0;slowT=0;dashT=0;nextWave()}
 function nextWave(){wave++;enemies=[];ebul=[];if(wave===2){bossWave();return}const rows=Math.min(2+Math.floor(wave/3),3),cols=4,pool=WAVE_POOL[Math.min(wave-1,WAVE_POOL.length-1)];
 for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const n=pool[(r*3+c+wave)%pool.length],T=TYPES[n],hp=T.hp+Math.floor(wave/6);enemies.push({x:70+c*105,y:80+r*78,n,hp,max:hp})}
@@ -86,13 +86,21 @@ if(state!=='load')return;for(let i=0;i<4;i++){const c=card(i);if(x>c.x&&x<c.x+c.
 if(x>140&&x<340&&y>530&&y<580)startRun()}
 const card=i=>({x:16+(i%4)*114,w:106,h:150});
 cv.addEventListener('click',e=>tapAt(e.clientX,e.clientY));
+const canvasTouches={};
+function syncPad(){padL=0;padR=0;for(const side of Object.values(canvasTouches)){if(side==='L')padL=1;if(side==='R')padR=1}}
+function touchSide(cx){const r=cv.getBoundingClientRect();return (cx-r.left)<r.width/2?'L':'R'}
+cv.addEventListener('touchstart',e=>{e.preventDefault();for(const t of e.changedTouches){if(state==='play'||state==='pause'){canvasTouches[t.identifier]=touchSide(t.clientX);syncPad()}else tapAt(t.clientX,t.clientY)}},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){if(canvasTouches[t.identifier]!==undefined)canvasTouches[t.identifier]=touchSide(t.clientX)}syncPad()},{passive:false});
+function endCanvasTouch(e){e.preventDefault();for(const t of e.changedTouches)delete canvasTouches[t.identifier];syncPad()}
+cv.addEventListener('touchend',endCanvasTouch,{passive:false});
+cv.addEventListener('touchcancel',endCanvasTouch,{passive:false});
 [['bl','ArrowLeft'],['br','ArrowRight'],['bf','Space'],['ba','ShiftLeft']].forEach(([id,k])=>{const b=document.getElementById(id);
-b.addEventListener('touchstart',e=>{e.preventDefault();keys[k]=1;if(k==='ShiftLeft')useAbility();if(state==='start'||state==='over')goLoad()});b.addEventListener('touchend',e=>{e.preventDefault();keys[k]=0})});
+b.addEventListener('touchstart',e=>{e.preventDefault();keys[k]=1;if(k==='ShiftLeft')useAbility();if(state==='start'||state==='over')goLoad()},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();keys[k]=0},{passive:false});b.addEventListener('touchcancel',e=>{e.preventDefault();keys[k]=0},{passive:false})});
 function hit(){if(inv>0)return;if(shield>0){shield=0;shT=900;inv=60;boom(p.x,H-40,'#fd4');beep(600,.2,'triangle',.08);quip='RIND SHIELD POPPED';quipT=60;return}lives--;inv=120;boom(p.x,H-40,'#aaa');beep(80,.5,'sawtooth',.1);
 if(lives<=0){state='over';if(score>hi){hi=score;localStorage.ratHi=hi}}}
 function update(){t++;if(state!=='play')return;
 if(abCd>0)abCd--;if(slowT>0)slowT--;if(selA===0&&shield===0&&--shT<=0)shield=1;if(dashT>0){dashT--;p.x+=dashDir*14}
-if(keys.ArrowLeft||keys.KeyA)p.x-=4.5;if(keys.ArrowRight||keys.KeyD)p.x+=4.5;p.x=Math.max(20,Math.min(W-20,p.x));
+if(keys.ArrowLeft||keys.KeyA||padL)p.x-=4.5;if(keys.ArrowRight||keys.KeyD||padR)p.x+=4.5;p.x=Math.max(20,Math.min(W-20,p.x));
 const G=GUNS[selG];cool--;if(keys.Space&&cool<=0&&bullets.length<G.max){const B=(vx)=>bullets.push({x:p.x,y:H-55,vx,dmg:G.dmg,pierce:G.pierce,hits:[]});
 if(G.spread){B(-2);B(0);B(2)}else B(0);cool=G.cd;beep(G.pierce?300:G.cd<10?1100:880,.06,G.pierce?'sawtooth':'square')}
 bullets.forEach(b=>{b.y-=G.pierce?11:G.cd<10?10:8;b.x+=b.vx});bullets=bullets.filter(b=>b.y>-20&&b.x>0&&b.x<W);
