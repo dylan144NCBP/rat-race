@@ -649,6 +649,7 @@ function update(){
 }
 
 function draw(){
+  if(!camera||!player){ctx.fillStyle="#0d1a16";ctx.fillRect(0,0,W,H);return;}
   drawBg(camera.x,depth);
   for(const p of platforms)drawPlatform(p,camera.x);
   for(const c of pickups)if(!c.got)drawCheese(c.x,c.y,camera.x,frame);
@@ -670,15 +671,17 @@ function draw(){
 }
 
 function loop(){
-  update();
-  draw();
   requestAnimationFrame(loop);
+  try{update();draw();}catch(err){console.error(err);}
 }
 
 document.getElementById("btnStart").onclick=startRun;
 // show pads on coarse pointers
 if(window.matchMedia("(pointer:coarse)").matches)pads.classList.add("show");
 
+// Build a preview world so the canvas paints behind the menu (camera was undefined before Start -> draw() threw and killed the loop)
+depth=1;score=0;cheese=0;invuln=0;frame=0;player=makePlayer();buildDepth(1);
+window.addEventListener("orientationchange",()=>setTimeout(resize,250));
 loop();
 })();
 </script>
