@@ -1,0 +1,213 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Rat Race: Paper Sewer RPG</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{margin:0;font-family:"Comic Sans MS","Trebuchet MS",sans-serif;background:#1d2a22;color:#222;height:100vh;overflow:hidden;touch-action:manipulation}
+#app{max-width:520px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:repeating-linear-gradient(0deg,#2f4a3a 0 38px,#29402f 38px 40px);position:relative}
+.paper{background:#fffdf3;border:3px solid #222;border-radius:12px;box-shadow:5px 5px 0 #0007}
+h1{font-size:42px;margin:6px 0;color:#ffe066;text-shadow:3px 3px 0 #222,-2px -2px 0 #222;transform:rotate(-3deg)}
+.btn{display:block;width:100%;font:bold 22px inherit;font-family:inherit;padding:16px;margin:8px 0;background:#ffe066;border:3px solid #222;border-radius:14px;box-shadow:4px 4px 0 #222;cursor:pointer}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #222}
+.btn:disabled{opacity:.4}
+.screen{flex:1;display:flex;flex-direction:column;padding:12px;overflow:auto}
+.center{text-align:center;justify-content:center}
+#stage{flex:1;display:flex;justify-content:space-around;align-items:flex-end;padding:10px 6px 20px;position:relative;min-height:230px}
+.fighter{text-align:center;position:relative;transition:transform .2s;flex:1}
+.cut{font-size:64px;display:inline-block;filter:drop-shadow(3px 3px 0 #fff) drop-shadow(-3px -3px 0 #fff) drop-shadow(3px -3px 0 #fff) drop-shadow(-3px 3px 0 #fff) drop-shadow(4px 6px 0 #0006);animation:bob 1.2s ease-in-out infinite}
+.boss .cut{font-size:96px}
+@keyframes bob{50%{transform:translateY(-6px) rotate(2deg)}}
+.name{font-size:13px;font-weight:bold;background:#fffdf3;border:2px solid #222;border-radius:8px;padding:1px 5px;display:inline-block}
+.bar{height:12px;border:2px solid #222;border-radius:6px;background:#555;margin:3px auto;width:90%;overflow:hidden}
+.bar i{display:block;height:100%;background:#4cd964;transition:width .3s}
+.tgt{outline:4px dashed #ffe066;border-radius:12px;cursor:pointer}
+.hit{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-8px) rotate(-6deg)}75%{transform:translateX(8px) rotate(6deg)}}
+.lunge{transform:translateX(60px) translateY(-30px)}
+.lungeL{transform:translateX(-60px)}
+#hud{display:flex;gap:8px;padding:8px}
+#hud .paper{flex:1;padding:6px 10px;font-weight:bold;font-size:15px}
+#log{margin:0 8px;padding:8px 12px;min-height:52px;font-size:16px}
+#menu{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px}
+#menu .btn{margin:0;font-size:20px;padding:18px 6px}
+#ac{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:#0006;z-index:5}
+#ring{width:200px;height:200px;border-radius:50%;border:6px solid #fff;position:relative;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;font-weight:bold;text-shadow:2px 2px 0 #222}
+#ring b{position:absolute;border:6px solid #ffe066;border-radius:50%}
+#meter{width:280px;height:40px;border:4px solid #fff;border-radius:10px;position:relative;background:#333}
+#meter .zone{position:absolute;top:0;bottom:0;background:#4cd964}
+#meter .needle{position:absolute;top:-6px;bottom:-6px;width:8px;background:#ffe066;border:2px solid #222}
+#acmsg{color:#fff;font-size:24px;margin:14px;text-shadow:2px 2px 0 #222;text-align:center}
+#tap{width:90%;height:110px;font-size:30px}
+.pop{position:absolute;font-size:30px;font-weight:bold;color:#fff;text-shadow:3px 3px 0 #c00,-2px -2px 0 #222;animation:up 1s forwards;pointer-events:none;z-index:9}
+@keyframes up{to{transform:translateY(-70px);opacity:0}}
+.map{display:flex;flex-direction:column;gap:8px}
+.node{padding:12px;font-size:17px;display:flex;align-items:center;gap:10px}
+.node.done{opacity:.5}.node.cur{background:#ffe066}
+.node span{font-size:34px}
+.big{font-size:18px;line-height:1.4;padding:14px}
+</style></head><body><div id="app"></div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s),app=$('#app'),wait=ms=>new Promise(r=>setTimeout(r,ms));
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+// ---------- data ----------
+const E={
+ project:{n:"Project",e:"📁",hp:6,atk:2,moves:[["Scope Creep","slowly grows… into your face"]]},
+ customer:{n:"Customer",e:"🤬",hp:7,atk:2,moves:[["Can I Speak To Your Manager","screams a complaint"],["Chargeback","demands a refund"]]},
+ deadline:{n:"Deadline",e:"⏰",hp:5,atk:3,moves:[["Whoosh","flies past… then back"]]},
+ boss:{n:"The Boss",e:"👔",hp:12,atk:3,moves:[["Quick Sync","schedules a 'quick sync'"],["Per My Last Email","weaponizes politeness"]]},
+ shark:{n:"Spreadsheet Shark",e:"🦈",hp:14,atk:3,moves:[["#REF! Bite","bites with broken formulas"],["VLOOKUP Chomp","looks up your weak spot"]]},
+ hydra:{n:"Meeting Hydra",e:"🐲",hp:16,atk:3,moves:[["This Could've Been An Email","drones for an hour"],["Recurring Invite","multiplies on your calendar"]]},
+ blob:{n:"HR Blob",e:"🫠",hp:15,atk:3,moves:[["Mandatory Training","oozes compliance slides"],["Let's Circle Back","engulfs you in policy"]]},
+ feins:{n:"Sales Fein",e:"👱",hp:5,atk:2,moves:[["Cold Call","pitches aggressively"],["Synergy!","high-fives too hard"]]},
+ chair:{n:"Alligator Chair",e:"🐊",boss:1,hp:32,atk:4,moves:[["Swivel Chomp","spins and CHOMPS"],["Ergonomic Crush","adjusts lumbar… onto you"],["Summon Feins","rolls in a Sales Fein!","summon:feins"]]},
+ blain:{n:"Blain Berry",e:"🏈",boss:1,hp:36,atk:4,moves:[["Hail Mary","launches a football"],["Blitz","rushes the line"],["Halftime Speech","yells 'GIVE ME 110%!' (+ATK)","buff"]],tint:"hue-rotate(200deg)"},
+ toad:{n:"Justins Stink",e:"🐸",boss:1,hp:42,atk:5,moves:[["Projectile Puke","throws up at you!"],["Stink Cloud","releases a funk (poison)","poison"],["Belly Flop","flattens you"]]},
+ ceo:{n:"The CEO Rat King",e:"👑",boss:1,hp:55,atk:5,moves:[["Restructuring","eliminates your position"],["Golden Parachute","floats away… and heals","heal"],["All-Hands","summons a Deadline","summon:deadline"]]}
+};
+const CAMPAIGN=[
+ {t:"Drain Pipe Lobby",d:"The commute begins. Something stinks — it's Monday.",f:["project","customer"]},
+ {t:"Cubicle Culvert",d:"Spreadsheets swim in the runoff.",f:["shark","deadline"]},
+ {t:"BOSS: The Swivel Lair",d:"A giant chair with teeth. Sales Feins orbit it like moons of desperation.",f:["feins","chair","feins"]},
+ {t:"Conference Cistern",d:"A meeting that never ends. Literally has heads.",f:["hydra","boss"]},
+ {t:"BOSS: Locker Room Overflow",d:"Coach Blain Berry is suited up in blue and ready to throw.",f:["blain","feins"]},
+ {t:"HR Holding Tank",d:"Please take a number. And a pamphlet.",f:["blob","customer","deadline"]},
+ {t:"BOSS: The Stink Pond",d:"Justins Stink croaks. The air turns green.",f:["toad"]},
+ {t:"FINAL: The Penthouse Drain",d:"The top of the sewer. The Rat King himself.",f:["ceo","boss"]}
+];
+const ITEMS={"Stale Cheese":{d:"Heal 8 HP",f:p=>heal(p,8)},"Energy Drink":{d:"+5 FP",f:p=>{p.fp=Math.min(p.mfp,p.fp+5);say("FP +5! You can hear colors.")}},"PTO Voucher":{d:"Heal 20 HP",f:p=>heal(p,20)},"Coffee Bomb":{d:"3 dmg to all foes",f:async()=>{for(const e of alive())await dmg(e,3)}}};
+let P,G,foes,turnBusy;
+function newGame(endless){P={hp:20,mhp:20,fp:10,mfp:10,atk:2,lvl:1,xp:0,items:{"Stale Cheese":2,"Energy Drink":1,"Coffee Bomb":1},poison:0};G={stage:0,endless:!!endless,loop:0}}
+// ---------- screens ----------
+function title(){app.innerHTML=`<div class="screen center" style="text-align:center">
+<h1>RAT RACE</h1><div style="color:#fff;font-size:20px;margin-bottom:6px;text-shadow:2px 2px 0 #222">✂️ Paper Sewer RPG ✂️</div>
+<div class="cut" style="font-size:110px">🐀</div>
+<div class="paper big">You are a rat in the corporate sewer. Escape the grind one turn-based battle at a time. Tap at the right moment for bonus damage and to block hits!</div>
+<button class="btn" onclick="newGame();map()">▶ Start Campaign</button>
+<button class="btn" style="background:#9be7ff" onclick="newGame(1);G.stage=0;map()">♾ Endless Escape</button>
+<button class="btn" style="background:#fff" onclick="howTo()">❓ How to Play</button></div>`}
+function howTo(){app.innerHTML=`<div class="screen"><div class="paper big"><b>How to play</b><br>
+👟 <b>Jump</b>: tap when the yellow ring hits the white circle. Nail it to bounce for a 2nd hit!<br>
+🧀 <b>Cheese Hammer</b>: tap when the needle is in the green zone. Can't hit flying Deadlines... kidding, it can.<br>
+✨ <b>Special</b> (costs FP): Rat Rush = mash TAP fast; Burnout Blast hits everyone.<br>
+🎒 <b>Item</b>: heal or blast.<br>
+🛡 <b>Guard</b>: when an enemy attacks, tap GUARD when it says NOW! to halve damage (perfect = 0 damage &amp; a counter-nibble).<br>
+Win battles to gain XP and level up. Beat 8 stages to clear the campaign, or go Endless forever.</div>
+<button class="btn" onclick="title()">Back</button></div>`}
+function map(){
+ if(!G.endless&&G.stage>=CAMPAIGN.length)return win();
+ const st=stageData();
+ let list=G.endless?`<div class="paper node cur"><span>♾</span><div><b>Endless Depth ${G.stage+1}</b><br>${st.d}</div></div>`:
+ CAMPAIGN.map((s,i)=>`<div class="paper node ${i<G.stage?'done':i==G.stage?'cur':''}"><span>${i<G.stage?'✅':s.t.includes('BOSS')||s.t.includes('FINAL')?'💀':'🕳'}</span><div><b>${s.t}</b>${i==G.stage?'<br>'+s.d:''}</div></div>`).join('');
+ app.innerHTML=`<div class="screen"><h1 style="font-size:30px">Sewer Map</h1>
+ <div class="paper" style="padding:8px;margin-bottom:8px;font-weight:bold">🐀 Lv${P.lvl} • ❤️ ${P.hp}/${P.mhp} • ⚡ ${P.fp}/${P.mfp} • XP ${P.xp}/${P.lvl*10}</div>
+ <div class="map">${list}</div><button class="btn" onclick="battle()">⚔️ Fight!</button></div>`}
+function stageData(){
+ if(!G.endless)return CAMPAIGN[G.stage];
+ const n=G.stage,bosses=["chair","blain","toad","ceo"];
+ if(n%4==3){const b=bosses[Math.floor(n/4)%4];return{d:`A wild ${E[b].n} blocks the pipe!`,f:b=="chair"?["feins",b,"feins"]:[b,"feins"]}}
+ const pool=["project","customer","deadline","boss","shark","hydra","blob","feins"];
+ return{d:["More work keeps coming.","The drip of endless tickets.","Q4 is here. It's always Q4."][n%3],f:Array.from({length:Math.min(3,2+(n>5))},()=>pool[R(0,Math.min(7,2+n))])}}
+function mk(k){const b=E[k],sc=1+(G.endless?G.stage*0.08:0);return{k,...b,mhp:Math.round(b.hp*sc),hp:Math.round(b.hp*sc),atk:b.atk+(G.endless?Math.floor(G.stage/4):0),id:Math.random()}}
+// ---------- battle ----------
+function battle(){
+ foes=stageData().f.map(mk);turnBusy=false;
+ app.innerHTML=`<div id="hud"><div class="paper">❤️ <span id="php"></span></div><div class="paper">⚡ FP <span id="pfp"></span></div><div class="paper">Lv <span id="plv"></span></div></div>
+ <div id="stage"><div class="fighter" id="pl"><div class="cut">🐀</div><div class="name">You</div></div><div id="foes" style="display:flex;flex:2;justify-content:space-around;align-items:flex-end"></div></div>
+ <div id="log" class="paper">A battle begins!</div><div id="menu"></div>
+ <div id="ac"><div id="acbox"></div><div id="acmsg"></div><button class="btn" id="tap">TAP!</button></div>`;
+ draw();playerTurn()}
+const alive=()=>foes.filter(f=>f.hp>0);
+function draw(){
+ $('#php').textContent=`${P.hp}/${P.mhp}`;$('#pfp').textContent=`${P.fp}/${P.mfp}`;$('#plv').textContent=P.lvl+(P.poison?' 🤢':'');
+ $('#foes').innerHTML=foes.map((f,i)=>f.hp<=0?'':`<div class="fighter ${f.boss?'boss':''}" id="f${i}" data-i="${i}"><div class="cut" style="${f.tint?'filter:'+f.tint+' drop-shadow(3px 3px 0 #fff)':''}">${f.e}</div><div class="bar"><i style="width:${100*f.hp/f.mhp}%;${f.hp/f.mhp<.3?'background:#ff3b30':''}"></i></div><div class="name">${f.n} ${f.hp}</div></div>`).join('')}
+function say(t){$('#log').innerHTML=t}
+function pop(el,t,c){const r=el.getBoundingClientRect(),a=app.getBoundingClientRect(),d=document.createElement('div');d.className='pop';d.textContent=t;if(c)d.style.textShadow=`3px 3px 0 ${c},-2px -2px 0 #222`;d.style.left=(r.left-a.left+r.width/2-20)+'px';d.style.top=(r.top-a.top)+'px';app.appendChild(d);setTimeout(()=>d.remove(),1000)}
+function menu(btns){$('#menu').innerHTML='';btns.forEach(([t,f,dis,col])=>{const b=document.createElement('button');b.className='btn';b.innerHTML=t;b.disabled=!!dis;if(col)b.style.background=col;b.onclick=f;$('#menu').appendChild(b)})}
+function playerTurn(){
+ if(!alive().length)return victory();
+ say("Your move, rat. What'll it be?");
+ menu([["👟 Jump",()=>pick(jump)],["🧀 Hammer",()=>pick(hammer)],["✨ Special",specials,0,"#d4a5ff"],["🎒 Item",items,0,"#9be7ff"]])}
+function pick(fn){
+ const a=alive();if(a.length==1)return fn(a[0]);
+ say("Tap a target!");menu([["↩ Back",playerTurn,0,"#fff"]]);
+ a.forEach(f=>{const el=$('#f'+foes.indexOf(f));el.classList.add('tgt');el.onclick=()=>{menu([]);fn(f)}})}
+function specials(){menu([
+ ["🐀 Rat Rush<br><small>3 FP • mash</small>",()=>pick(rush),P.fp<3,"#d4a5ff"],
+ ["🔥 Burnout Blast<br><small>5 FP • all foes</small>",blast,P.fp<5,"#ff9f7a"],
+ ["🧘 Quiet Quit<br><small>4 FP • heal 10</small>",async()=>{P.fp-=4;menu([]);heal(P,10);draw();await wait(900);enemyTurn()},P.fp<4,"#b5f5b5"],
+ ["↩ Back",playerTurn,0,"#fff"]])}
+function items(){const ks=Object.keys(P.items).filter(k=>P.items[k]>0);
+ menu([...ks.map(k=>[`${k} ×${P.items[k]}<br><small>${ITEMS[k].d}</small>`,async()=>{P.items[k]--;menu([]);await ITEMS[k].f(P);draw();await wait(900);if(!alive().length)return victory();enemyTurn()},0,"#9be7ff"]),["↩ Back",playerTurn,0,"#fff"]])}
+function heal(p,n){p.hp=Math.min(p.mhp,p.hp+n);say(`Healed ${n} HP. Mmm, self-care.`);pop($('#pl'),'+'+n,'#2a2')}
+async function dmg(f,n){f.hp=Math.max(0,f.hp-n);const el=$('#f'+foes.indexOf(f));if(el){pop(el,n);el.classList.add('hit')}await wait(450);draw()}
+// ---------- action commands ----------
+function ac(){const a=$('#ac');a.style.display='flex';return a}
+function acEnd(){$('#ac').style.display='none';$('#acbox').innerHTML='';$('#acmsg').textContent=''}
+function ringCmd(label){return new Promise(res=>{
+ ac();$('#acbox').innerHTML=`<div id="ring">${label}<b id="rb"></b></div>`;$('#acmsg').textContent='Tap when the rings line up!';
+ const rb=$('#rb'),T=1100+R(0,500),t0=performance.now();let done=false;
+ const fin=v=>{if(done)return;done=true;cancelAnimationFrame(raf);$('#tap').onpointerdown=null;$('#acmsg').textContent=v?'NICE!! ⭐':'Whiff...';setTimeout(()=>{acEnd();res(v)},450)};
+ let raf;const loop=t=>{const p=(t-t0)/T,s=Math.max(0,400*(1-p)+40*p);const size=200+(1-p)*240;rb.style.width=rb.style.height=size+'px';if(p>1.18)return fin(false);raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);
+ $('#tap').onpointerdown=e=>{e.preventDefault();const p=(performance.now()-t0)/T;fin(Math.abs(p-1)<0.12)}})}
+function meterCmd(){return new Promise(res=>{
+ ac();const z0=R(55,75);$('#acbox').innerHTML=`<div id="meter"><div class="zone" style="left:${z0}%;width:16%"></div><div class="needle" id="nd"></div></div>`;$('#acmsg').textContent='Tap when the needle is in the GREEN!';
+ const nd=$('#nd'),t0=performance.now();let done=false,raf;
+ const fin=v=>{if(done)return;done=true;cancelAnimationFrame(raf);$('#tap').onpointerdown=null;$('#acmsg').textContent=v?'SMASH!! ⭐':'Bonk.';setTimeout(()=>{acEnd();res(v)},450)};
+ const pos=()=>((performance.now()-t0)/1300)*100;
+ const loop=()=>{const p=pos();nd.style.left=Math.min(98,p)+'%';if(p>100)return fin(false);raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);
+ $('#tap').onpointerdown=e=>{e.preventDefault();const p=pos();fin(p>=z0-2&&p<=z0+16)}})}
+function mashCmd(){return new Promise(res=>{
+ ac();let n=0;$('#acbox').innerHTML=`<div id="ring" style="font-size:44px">0</div>`;$('#acmsg').textContent='MASH TAP! 3 seconds!';
+ $('#tap').onpointerdown=e=>{e.preventDefault();n++;$('#ring').textContent=n};
+ setTimeout(()=>{$('#tap').onpointerdown=null;$('#acmsg').textContent=n+' taps!';setTimeout(()=>{acEnd();res(n)},500)},3000)})}
+function guardCmd(name){return new Promise(res=>{
+ ac();$('#tap').textContent='🛡 GUARD';const delay=600+R(0,900);let st=0,t1=0,done=false;
+ $('#acbox').innerHTML=`<div id="ring" style="font-size:22px;text-align:center">${name}<br>winds up…</div>`;$('#acmsg').textContent='Wait for NOW!';
+ const fin=v=>{if(done)return;done=true;clearTimeout(to);clearTimeout(to2);$('#tap').onpointerdown=null;$('#acmsg').textContent=v==2?'PERFECT GUARD! 🛡⭐':v==1?'Guarded!':'Ouch!';setTimeout(()=>{$('#tap').textContent='TAP!';acEnd();res(v)},400)};
+ const to=setTimeout(()=>{st=1;t1=performance.now();$('#ring').innerHTML='NOW!';$('#ring').style.background='#ff3b30'},delay);
+ const to2=setTimeout(()=>fin(0),delay+450);
+ $('#tap').onpointerdown=e=>{e.preventDefault();if(!st)return fin(0);const d=performance.now()-t1;fin(d<160?2:1)}})}
+// ---------- player attacks ----------
+async function lunge(){$('#pl').classList.add('lunge');await wait(250)}
+function back(){$('#pl').classList.remove('lunge')}
+async function jump(f){menu([]);say(`You leap at ${f.n}!`);let ok=await ringCmd('👟');await lunge();await dmg(f,P.atk+(ok?1:0));
+ if(ok&&f.hp>0){say('Bounce! Again!');ok=await ringCmd('👟👟');if(ok)await dmg(f,P.atk)}back();await wait(400);enemyTurn()}
+async function hammer(f){menu([]);say(`You wind up the Cheese Hammer…`);const ok=await meterCmd();await lunge();await dmg(f,P.atk+(ok?2:0));if(ok)say(`${f.n} got cheddar'd.`);back();await wait(400);enemyTurn()}
+async function rush(f){P.fp-=3;menu([]);draw();say('Rat Rush! Scurry scurry!');const n=await mashCmd();await lunge();const hits=Math.min(6,1+Math.floor(n/5));for(let i=0;i<hits&&f.hp>0;i++)await dmg(f,1+Math.floor(P.atk/2));back();await wait(400);enemyTurn()}
+async function blast(){P.fp-=5;menu([]);draw();say('Burnout Blast! You haven\'t slept in days and it SHOWS.');const ok=await ringCmd('🔥');for(const f of alive())await dmg(f,P.atk+(ok?2:0));await wait(400);enemyTurn()}
+// ---------- enemy turn ----------
+async function enemyTurn(){
+ if(!alive().length)return victory();
+ menu([]);
+ if(P.poison){P.poison--;P.hp=Math.max(1,P.hp-1);pop($('#pl'),'1 🤢','#2a2');say('The stink lingers… -1 HP');draw();await wait(800)}
+ for(const f of [...alive()]){
+  if(f.hp<=0)continue;const el=$('#f'+foes.indexOf(f));
+  const mv=f.moves[R(0,f.moves.length-1)],[mn,md,fx]=mv;
+  say(`<b>${f.n}</b> uses <b>${mn}</b>! It ${md}`);await wait(700);
+  if(fx&&fx.startsWith('summon')){const k=fx.split(':')[1];if(alive().length<4){foes.push(mk(k));draw()}else say(`${f.n} tried to summon help but the room is at capacity.`);await wait(800);continue}
+  if(fx=='buff'){f.atk++;pop(el,'ATK↑','#06f');await wait(800);continue}
+  if(fx=='heal'){f.hp=Math.min(f.mhp,f.hp+8);draw();await wait(800);continue}
+  if(el)el.classList.add('lungeL');
+  const g=await guardCmd(`${f.e} ${mn}`);if(el)el.classList.remove('lungeL');
+  let d=g==2?0:g==1?Math.ceil(f.atk/2):f.atk;
+  if(fx=='poison'&&g<2)P.poison=3;
+  P.hp=Math.max(0,P.hp-d);pop($('#pl'),d||'BLOCK',d?'#c00':'#06f');$('#pl').classList.add('hit');setTimeout(()=>$('#pl')&&$('#pl').classList.remove('hit'),300);
+  if(g==2){say('Perfect guard! You counter-nibble.');await dmg(f,1)}
+  draw();await wait(600);if(P.hp<=0)return lose()}
+ playerTurn()}
+// ---------- outcomes ----------
+async function victory(){
+ const xp=foes.reduce((s,f)=>s+(f.boss?8:3),0);P.xp+=xp;let msg=`Victory! +${xp} XP.`;
+ if(Math.random()<.6){const k=Object.keys(ITEMS)[R(0,3)];P.items[k]=(P.items[k]||0)+1;msg+=` Found a ${k}!`}
+ while(P.xp>=P.lvl*10){P.xp-=P.lvl*10;P.lvl++;P.mhp+=5;P.mfp+=2;if(P.lvl%2==0)P.atk++;msg+=` <b>LEVEL UP! Lv${P.lvl}</b> — HP & FP up${P.lvl%2==0?', ATK up':''}! (Still no raise.)`}
+ P.hp=Math.min(P.mhp,P.hp+5);P.fp=Math.min(P.mfp,P.fp+3);P.poison=0;
+ say(msg);menu([["➡ Onward",()=>{G.stage++;map()}]])}
+function lose(){app.innerHTML=`<div class="screen center" style="text-align:center"><h1>FIRED.</h1><div class="cut" style="font-size:100px">🪦</div>
+<div class="paper big">You were "let go" at ${G.endless?'Endless Depth '+(G.stage+1):CAMPAIGN[G.stage].t}.<br>HR will mail your stapler.</div>
+<button class="btn" onclick="title()">Try Again</button></div>`}
+function win(){app.innerHTML=`<div class="screen center" style="text-align:center"><h1>ESCAPED!</h1><div class="cut" style="font-size:100px">🐀🏖️</div>
+<div class="paper big">You beat the Rat King and escaped the sewer! You are now… self-employed. The grind continues, but at least you set your own hours.</div>
+<button class="btn" style="background:#9be7ff" onclick="G.endless=true;G.stage=CAMPAIGN.length;map()">♾ Keep Going (Endless)</button>
+<button class="btn" onclick="title()">Title</button></div>`}
+title();
+</script></body></html>
