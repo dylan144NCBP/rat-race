@@ -98,7 +98,13 @@ const GUNS=[
 {n:'COFFEE CANNON',d:'Lobbed mug. Splash 2 dmg + scalding puddle that burns & slows shots.',cd:44,max:2,dmg:2,k:'coffee'},
 {n:'REPLY-ALL CHAIN',d:'Email zap arcs to up to 3 more enemies nearby.',cd:30,max:2,dmg:2,k:'chain'}];
 let puds=[],zaps=[];
-function killPts(e){e.dead=1;score+=Math.round(TYPES[e.n].pts*wave*(1+pv('magnet')*.25));boom(e.x,e.y,TYPES[e.n].c);boom(e.x,e.y,'#fff');beep(200,.12,'triangle',.08)}
+const PUPS=[{k:'ot',n:'OVERTIME',i:'⏰',c:'#ff8a3a',d:'Rapid fire 8s',T:480},{k:'life',n:'GOLDEN CHEESE',i:'🧀',c:'#ffd84a',d:'+1 life'},{k:'bub',n:'BUBBLE WRAP',i:'🫧',c:'#9ae0ff',d:'Absorbs 2 hits'},{k:'cof',n:'COFFEE BREAK',i:'☕',c:'#c08a5a',d:'Slow enemies & shots 6s',T:360},{k:'promo',n:'PROMOTION',i:'📈',c:'#7aff7a',d:'Double damage 8s',T:480},{k:'shred',n:'PAPER SHREDDER',i:'📄',c:'#f0f0f0',d:'Extra spread shots 8s',T:480},{k:'alarm',n:'FIRE ALARM',i:'🚨',c:'#ff4a4a',d:'Hits ALL enemies for 4'},{k:'mag',n:'MAGNET',i:'🧲',c:'#e05ae0',d:'Pulls pickups, +50% score 10s',T:600}];
+let pups=[],buffs={},bub=0,pT=700,pops=[];const bf=k=>buffs[k]>0;
+function spawnPup(x,y,k){const P=k!==undefined?PUPS.find(o=>o.k===k):PUPS[Math.random()*PUPS.length|0];pups.push({x:x??40+Math.random()*(W-80),y:y??-20,ph:Math.random()*6,P})}
+function getPup(P){beep(880,.08,'triangle',.08);setTimeout(()=>beep(1320,.12,'triangle',.07),70);pops.push({x:p.x,y:H-70,s:P.n+'!',c:P.c,T:70});
+if(P.T)buffs[P.k]=P.T;if(P.k==='life')lives++;if(P.k==='bub')bub=2;if(P.k==='cof')slowT=Math.max(slowT,360);
+if(P.k==='alarm'){beep(700,.3,'square',.06);setTimeout(()=>beep(500,.3,'square',.06),150);enemies.slice().forEach(e=>{dmgE(e,4+pv('dmg'));boom(e.x,e.y,'#f44')})}}
+function killPts(e){e.dead=1;if(!e.boss&&Math.random()<(e.orb!==undefined?.1:.06))spawnPup(e.x,e.y);score+=Math.round(TYPES[e.n].pts*wave*(1+pv('magnet')*.25+(bf('mag')?.5:0)));boom(e.x,e.y,TYPES[e.n].c);boom(e.x,e.y,'#fff');beep(200,.12,'triangle',.08)}
 function dmgE(e,d){if(e.dead)return;e.fl=6;if((e.hp-=d)<=0)killPts(e)}
 function splash(x,y,d){boom(x,y,'#8a5a2a');beep(160,.25,'sine',.09);beep(90,.3,'triangle',.06);for(const e of enemies)if(Math.hypot(e.x-x,e.y-y)<55+(e.big?25*e.big:0))dmgE(e,d);puds.push({x,y,r:50,T:180})}
 function chainFrom(e0,d){const pts=[[p.x,H-55],[e0.x,e0.y]],hit=[e0];let cur=e0;for(let i=0;i<3+pv('twin');i++){let best=null,bd=150;for(const e of enemies)if(!e.dead&&!hit.includes(e)){const dd=Math.hypot(e.x-cur.x,e.y-cur.y);if(dd<bd){bd=dd;best=e}}if(!best)break;hit.push(best);pts.push([best.x,best.y]);dmgE(best,Math.max(1,d-1));cur=best}zaps.push({pts,T:14});beep(1600,.05,'sawtooth',.04);beep(2200,.08,'square',.03)}
@@ -145,7 +151,7 @@ function startRun(){reset();state='play'}
 function useAbility(){if(state!=='play'||abCd>0)return;if(selA===1){dashDir=(keys.ArrowLeft||keys.KeyA||padL)?-1:1;dashT=10;inv=Math.max(inv,30);abCd=90;beep(1000,.1,'triangle')}else if(selA===2){slowT=240;abCd=900;quip='COFFEE BREAK!';quipT=60;beep(300,.4,'sine',.08)}}
 const QUIPS=['Per my last email...','Circling back!','Quick sync?','This is due EOD.','Can you hop on a call?','Let\'s take this offline.','New priorities!','Synergy incoming!'];
 let state='start',keys={},padL=0,padR=0,p,bullets,ebul,enemies,parts,score,lives,wave,dir,speed,stepT,hi=+localStorage.ratHi||0,inv,quip,quipT,ufo,t=0,cool;
-function reset(){endless=0;p={x:W/2,w:30};bullets=[];puds=[];zaps=[];ebul=[];parts=[];score=0;lives=3+(selA===3?1:0);wave=0;pas={};newSong();inv=0;ufo=null;shield=selA===0?1:0;shT=0;abCd=0;slowT=0;dashT=0;nextWave()}
+function reset(){pups=[];buffs={};bub=0;pT=700;pops=[];endless=0;p={x:W/2,w:30};bullets=[];puds=[];zaps=[];ebul=[];parts=[];score=0;lives=3+(selA===3?1:0);wave=0;pas={};newSong();inv=0;ufo=null;shield=selA===0?1:0;shT=0;abCd=0;slowT=0;dashT=0;nextWave()}
 function nextWave(){wave++;enemies=[];ebul=[];puds=[];zaps=[];if(endless){endlessWave();return}if(wave===2){bossWave();return}if(wave===3){justinWave();return}if(wave>=4&&wave<=13){bigBoss(wave-4);return}if(wave===15){streetWave();return}const rows=Math.min(2+Math.floor(wave/3),3),cols=4,pool=WAVE_POOL[Math.min(wave===1?0:wave-2,WAVE_POOL.length-1)];
 for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const n=pool[(r*3+c+wave)%pool.length],T=TYPES[n],hp=T.hp+Math.floor(wave/6);enemies.push({x:70+c*105,y:80+r*78,n,hp,max:hp})}
 dir=1;speed=8+wave*2.5;stepT=0;quip='DEPTH '+wave+': '+(wave===14?'MANHOLE RUSH — '+ZONES[4].n:QUIPS[wave%QUIPS.length]);quipT=150;beep(300,.2);beep(450,.3)}
@@ -199,13 +205,13 @@ cv.addEventListener('touchend',endCanvasTouch,{passive:false});
 cv.addEventListener('touchcancel',endCanvasTouch,{passive:false});
 [['bl','ArrowLeft'],['br','ArrowRight'],['bf','Space'],['ba','ShiftLeft']].forEach(([id,k])=>{const b=document.getElementById(id);
 b.addEventListener('touchstart',e=>{e.preventDefault();keys[k]=1;if(k==='ShiftLeft')useAbility();if(state==='start'||state==='over')goLoad()},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();keys[k]=0},{passive:false});b.addEventListener('touchcancel',e=>{e.preventDefault();keys[k]=0},{passive:false})});
-function hit(){if(inv>0)return;if(shield>0){shield=0;shT=pv('rind')&&selA!==0?Math.max(400,900-(pv('rind')-1)*200):900;inv=60;boom(p.x,H-40,'#fd4');beep(600,.2,'triangle',.08);quip='RIND SHIELD POPPED';quipT=60;return}lives--;inv=120;boom(p.x,H-40,'#aaa');beep(80,.5,'sawtooth',.1);
+function hit(){if(inv>0)return;if(bub>0){bub--;inv=50;boom(p.x,H-40,'#9ae0ff');beep(1500,.06,'square',.06);beep(900,.08,'triangle',.05);pops.push({x:p.x,y:H-70,s:'*POP*',c:'#9ae0ff',T:40});return}if(shield>0){shield=0;shT=pv('rind')&&selA!==0?Math.max(400,900-(pv('rind')-1)*200):900;inv=60;boom(p.x,H-40,'#fd4');beep(600,.2,'triangle',.08);quip='RIND SHIELD POPPED';quipT=60;return}lives--;inv=120;boom(p.x,H-40,'#aaa');beep(80,.5,'sawtooth',.1);
 if(lives<=0){state='over';clearInterval(musT);if(score>hi){hi=score;localStorage.ratHi=hi}}}
 function update(){t++;if(state!=='play')return;
 if(abCd>0)abCd--;if(slowT>0)slowT--;if((selA===0||pv('rind'))&&shield===0&&--shT<=0)shield=1;if(dashT>0){dashT--;p.x+=dashDir*14}
 if(keys.ArrowLeft||keys.KeyA||padL)p.x-=4.5*(1+pv('feet')*.2);if(keys.ArrowRight||keys.KeyD||padR)p.x+=4.5*(1+pv('feet')*.2);p.x=Math.max(20,Math.min(W-20,p.x));
-const G=GUNS[selG];cool--;const tw=pv('twin');if(keys.Space&&cool<=0&&bullets.length<G.max+pv('mag')*2+tw*2){const B=(vx,ox=0)=>bullets.push({x:p.x+ox,y:H-55,vx,vy:G.k==='coffee'?-11:G.pierce?-11:G.k==='chain'?-12:G.cd<10?-10:-8,t:G.k,a:Math.atan2(-8,vx),dmg:G.dmg+pv('dmg'),pierce:G.pierce||pv('pierce'),hits:[]});
-if(G.spread){B(-2);B(0);B(2)}else if(G.k==='staple'){[-2.4,-1.2,0,1.2,2.4].forEach(v=>B(v))}else B(0);for(let i=1;i<=tw;i++){B(-.4*i,-14*i);B(.4*i,14*i)}cool=Math.max(3,Math.round(G.cd*Math.pow(.8,pv('rate'))));if(G.k==='staple'){beep(1400,.03,'square',.05);beep(260,.05,'square',.05)}else if(G.k==='coffee'){beep(140,.15,'sine',.09);beep(420,.08,'triangle',.04)}else if(G.k==='chain'){beep(1900,.07,'sawtooth',.04)}else beep(G.pierce?300:G.cd<10?1100:880,.06,G.pierce?'sawtooth':'square')}
+const G=GUNS[selG];cool--;const tw=pv('twin');if(keys.Space&&cool<=0&&bullets.length<G.max+pv('mag')*2+tw*2+(bf('ot')?3:0)+(bf('shred')?4:0)){const B=(vx,ox=0)=>bullets.push({x:p.x+ox,y:H-55,vx,vy:G.k==='coffee'?-11:G.pierce?-11:G.k==='chain'?-12:G.cd<10?-10:-8,t:G.k,a:Math.atan2(-8,vx),dmg:(G.dmg+pv('dmg'))*(bf('promo')?2:1),pierce:G.pierce||pv('pierce'),hits:[]});
+if(G.spread){B(-2);B(0);B(2)}else if(G.k==='staple'){[-2.4,-1.2,0,1.2,2.4].forEach(v=>B(v))}else B(0);if(bf('shred')){B(-2.6,-6);B(2.6,6)}for(let i=1;i<=tw;i++){B(-.4*i,-14*i);B(.4*i,14*i)}cool=Math.max(3,Math.round(G.cd*Math.pow(.8,pv('rate'))*(bf('ot')?.5:1)));if(G.k==='staple'){beep(1400,.03,'square',.05);beep(260,.05,'square',.05)}else if(G.k==='coffee'){beep(140,.15,'sine',.09);beep(420,.08,'triangle',.04)}else if(G.k==='chain'){beep(1900,.07,'sawtooth',.04)}else beep(G.pierce?300:G.cd<10?1100:880,.06,G.pierce?'sawtooth':'square')}
 bullets.forEach(b=>{if(b.t==='coffee'){b.vy+=.13;if(b.vy>=0&&!b.dead){b.dead=1;splash(b.x,b.y,b.dmg)}}b.y+=b.vy;b.x+=b.vx});
 enemies.forEach(e=>{if(e.stT>0){e.stT--;if(e.stT%30===0)dmgE(e,e.stN)}else e.stN=0;for(const q of puds)if(q.T%40===0&&Math.hypot(e.x-q.x,e.y-q.y)<q.r+(e.big?20*e.big:0))dmgE(e,1)});
 puds.forEach(q=>q.T--);puds=puds.filter(q=>q.T>0);zaps.forEach(z=>z.T--);zaps=zaps.filter(z=>z.T>0);bullets=bullets.filter(b=>b.y>-20&&b.x>0&&b.x<W);
@@ -222,6 +228,10 @@ if(ufo&&Math.abs(b.x-ufo.x)<30&&Math.abs(b.y-30)<12){b.dead=1;score+=300;boom(uf
 bullets=bullets.filter(b=>!b.dead);enemies=enemies.filter(e=>!e.dead);
 for(const b of ebul)if(Math.abs(b.x-p.x)<15&&b.y>H-50&&b.y<H-18){b.y=H+99;hit()}
 for(const e of enemies){if(e.y>H-75){hit();if(state==='play'){enemies.forEach(e=>e.y-=120)}break}}
+for(const k in buffs)if(buffs[k]>0)buffs[k]--;if(bf('cof'))stepT-=speed/120;
+if(--pT<=0){pT=600+Math.random()*480|0;spawnPup()}
+pups.forEach(u=>{u.y+=1.1;u.ph+=.04;u.x+=Math.sin(u.ph)*.7;if(bf('mag')){const dx=p.x-u.x,dy=H-35-u.y,d=Math.hypot(dx,dy);if(d<260&&d>1){u.x+=dx/d*3;u.y+=dy/d*2}}u.x=Math.max(16,Math.min(W-16,u.x));if(Math.abs(u.x-p.x)<26&&u.y>H-62&&u.y<H-10){u.got=1;getPup(u.P)}});pups=pups.filter(u=>!u.got&&u.y<H+20);
+pops.forEach(q=>{q.T--;q.y-=.6});pops=pops.filter(q=>q.T>0);
 if(inv>0)inv--;if(quipT>0)quipT--;
 enemies=enemies.filter(e=>!e.dead);if(!enemies.length){score+=100*wave;afterClear()}}
 function bg(){// bricks
@@ -270,7 +280,8 @@ txt((t>>5)%2?'PRESS ENTER OR TAP':'',W/2,520,18,'#fc4');txt('HI-SCORE '+hi,W/2,5
 if(state==='load'){drawLoad();return}
 if(state==='cust'){drawCust();return}
 if(state==='win'){wizard(90,250);rat(410,300);txt('YOU HAVE ESCAPED!',W/2,120,34,'#fd4');txt('The Rat Race is behind you.',W/2,158,15,'#fff');txt('Fresh air. No emails. No meetings.',W/2,182,12,'#cfe8b0');txt('REWARD: PERMANENT PTO 🧀',W/2,240,18,'#8f8');txt('Final score: '+score,W/2,290,18);txt('Lives left: '+lives+'  •  Passives: '+Object.values(pas).reduce((a,b)=>a+b,0),W/2,316,12);txt('Hi-score: '+hi,W/2,340,13,'#fc4');if(bestE)txt('Best endless round: '+bestE,W/2,364,12,'#c08ae0');txt('Bosses forever. +5% boss HP per round.',W/2,408,11,'#9ab880');R(90,420,300,60,(t>>4)%2?'#fd4':'#e0b830');txt('CONTINUE (ENDLESS) ▶',W/2,457,20,'#142016');R(90,500,300,50,'#2c3a22');txt('NEW RUN',W/2,532,18,'#cfe8b0');txt('ENTER: endless  •  R: new run',W/2,580,11,'#9ab880');return}
-enemies.forEach(enemy);if(ufo){ctx.fillStyle='#fc4';ctx.fillRect(ufo.x-26,22,52,16);ctx.fillStyle='#111';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText('CEO',ufo.x,34)}
+enemies.forEach(enemy);pups.forEach(u=>{const g=8+Math.sin(t/6)*3;ctx.globalAlpha=.35;E(u.x,u.y,16+g,16+g,u.P.c);ctx.globalAlpha=1;E(u.x,u.y,15,15,'#142016');ctx.strokeStyle=u.P.c;ctx.lineWidth=2;ctx.beginPath();ctx.arc(u.x,u.y,15,0,7);ctx.stroke();ctx.font='17px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(u.P.i,u.x,u.y+1);ctx.textBaseline='alphabetic'});
+pops.forEach(q=>{ctx.globalAlpha=Math.min(1,q.T/25);txt(q.s,q.x,q.y,14,q.c);ctx.globalAlpha=1});if(ufo){ctx.fillStyle='#fc4';ctx.fillRect(ufo.x-26,22,52,16);ctx.fillStyle='#111';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText('CEO',ufo.x,34)}
 puds.forEach(q=>{ctx.globalAlpha=Math.min(1,q.T/40)*.55;E(q.x,q.y,q.r,q.r*.55,'#6a3a14');E(q.x-8,q.y-4,q.r*.5,q.r*.25,'#a8703a');ctx.globalAlpha=1;if(t%12===0)parts.push({x:q.x+(Math.random()-.5)*q.r,y:q.y,vx:0,vy:-.6,l:25,c:'#ddd8'})});
 enemies.forEach(e=>{if(e.stT>0)for(let i=0;i<e.stN;i++)R(e.x-8+i*7,e.y-4,5,2,'#ccd')});
 zaps.forEach(z=>{ctx.strokeStyle=z.T%4<2?'#bff':'#6af';ctx.lineWidth=3;ctx.beginPath();z.pts.forEach(([x,y],i)=>{if(!i)ctx.moveTo(x,y);else{const [px,py]=z.pts[i-1];for(let s=1;s<=4;s++)ctx.lineTo(px+(x-px)*s/4+(s<4?(Math.random()-.5)*14:0),py+(y-py)*s/4+(s<4?(Math.random()-.5)*14:0))}});ctx.stroke();ctx.lineWidth=1});
@@ -283,6 +294,8 @@ ctx.textAlign='center';ctx.fillText(endless?'ENDLESS ROUND '+eR()+' (+'+Math.rou
 ctx.font='bold 10px monospace';ctx.textAlign='left';ctx.fillStyle='#fd4';ctx.fillText(GUNS[selG].n+' | '+ABIL[selA].n+(selA===0?(shield?' ON':' '+Math.ceil(shT/60)+'s'):selA===1||selA===2?(abCd>0?' '+Math.ceil(abCd/60)+'s':' READY'):''),18,H-4);
 if(shield>0&&(selA===0||pv('rind'))){ctx.strokeStyle='#fd4a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,H-34,24,0,7);ctx.stroke()}if(slowT>0){ctx.fillStyle='#4af2';ctx.fillRect(0,0,W,H)}
 if(quipT>0)txt(quip,W/2,H/2+60,14,'#fc4');
+{let n=0;PUPS.forEach(P=>{if(!P.T||!bf(P.k))return;const x=W-36,y=34+n*30;R(x-14,y-12,42,26,'#000a');ctx.font='14px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(P.i,x,y-2);ctx.textBaseline='alphabetic';R(x-12,y+8,38,4,'#333');R(x-12,y+8,38*buffs[P.k]/P.T,4,P.c);ctx.font='bold 8px monospace';ctx.fillStyle='#fff';ctx.fillText(Math.ceil(buffs[P.k]/60)+'s',x+18,y-2);n++});
+if(bub>0&&state==='play'){ctx.strokeStyle='#9ae0ffaa';ctx.lineWidth=2;for(let i=0;i<bub;i++){ctx.beginPath();ctx.arc(p.x,H-34,28+i*5,0,7);ctx.stroke()}}}
 if(state==='wiz')drawWiz();
 if(state==='pause'){ctx.fillStyle='#000a';ctx.fillRect(0,0,W,H);txt('PAUSED',W/2,H/2-10,40);txt('Unpaid break. Press P to resume.',W/2,H/2+25,13)}
 if(state==='over'){ctx.fillStyle='#000c';ctx.fillRect(0,0,W,H);txt('BURNT OUT',W/2,220,44,'#e44');txt('Final score: '+score,W/2,270,20);txt(endless?'Endless rounds survived: '+(eR()-1)+(bestE?'  (best '+bestE+')':''):'Reached depth '+wave,W/2,300,14);
